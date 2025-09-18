@@ -5,17 +5,14 @@ import 'package:provider/provider.dart';
 import '../providers/labour_store.dart';
 import 'labour_detail_page.dart';
 
-class ScanPage extends StatefulWidget {
-  final String mode; // "attendance" or "payment"
-  final String? paymentType; // "heavy" or "low", if mode == "payment"
-
-  const ScanPage({super.key, this.mode = "attendance", this.paymentType});
+class AttendanceScanPage extends StatefulWidget {
+  const AttendanceScanPage({super.key});
 
   @override
-  State<ScanPage> createState() => _ScanPageState();
+  State<AttendanceScanPage> createState() => _AttendanceScanPageState();
 }
 
-class _ScanPageState extends State<ScanPage> {
+class _AttendanceScanPageState extends State<AttendanceScanPage> {
   late final MobileScannerController _controller;
   bool _handling = false;
 
@@ -74,48 +71,33 @@ class _ScanPageState extends State<ScanPage> {
         return;
       }
 
-      if (widget.mode == "attendance") {
-        final result = store.markAttendanceById(id);
-        if (!mounted) return;
-        switch (result) {
-          case MarkAttendanceResult.success:
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Attendance marked')),
-            );
-            await _controller.stop();
-            if (!mounted) return;
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (_) => LabourDetailPage(labourId: id),
-              ),
-            );
-            break;
-          case MarkAttendanceResult.alreadyMarked:
-            await _showInfoDialog(
-              'Attendance already done',
-              'Attendance for this person is already recorded today.\nPlease scan again tomorrow.',
-            );
-            break;
-          case MarkAttendanceResult.notFound:
-            await _showInfoDialog(
-              'Labour not found',
-              'This QR does not match any labour profile.',
-            );
-            break;
-        }
-      } else if (widget.mode == "payment") {
-        int amount = widget.paymentType == 'heavy' ? 50 : 30;
-        if (widget.paymentType == 'heavy') {
-          store.addHeavyPayment(id, amount);
-        } else {
-          store.addLowPayment(id, amount);
-        }
-        await _controller.stop();
-        if (!mounted) return;
-        Navigator.of(context).pop(id); // Return id to PaymentPage
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${labour.name} received Rs $amount.')),
-        );
+      final result = store.markAttendanceById(id);
+      if (!mounted) return;
+      switch (result) {
+        case MarkAttendanceResult.success:
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Attendance marked')),
+          );
+          await _controller.stop();
+          if (!mounted) return;
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (_) => LabourDetailPage(labourId: id),
+            ),
+          );
+          break;
+        case MarkAttendanceResult.alreadyMarked:
+          await _showInfoDialog(
+            'Attendance already done',
+            'Attendance for this person is already recorded today.\nPlease scan again tomorrow.',
+          );
+          break;
+        case MarkAttendanceResult.notFound:
+          await _showInfoDialog(
+            'Labour not found',
+            'This QR does not match any labour profile.',
+          );
+          break;
       }
     } finally {
       _handling = false;
@@ -125,7 +107,7 @@ class _ScanPageState extends State<ScanPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.mode == 'attendance' ? 'Scan Attendance' : 'Scan for Payment')),
+      appBar: AppBar(title: const Text('Scan Attendance')),
       body: MobileScanner(
         controller: _controller,
         onDetect: (capture) {

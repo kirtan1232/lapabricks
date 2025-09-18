@@ -2,19 +2,90 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/labour_store.dart';
 import '../models/labour.dart';
-import 'scan_page.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
+
+class PaymentScanPage extends StatefulWidget {
+  const PaymentScanPage({super.key});
+
+  @override
+  State<PaymentScanPage> createState() => _PaymentScanPageState();
+}
+
+class _PaymentScanPageState extends State<PaymentScanPage> {
+  late final MobileScannerController _controller;
+  bool _handling = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = MobileScannerController(
+      detectionSpeed: DetectionSpeed.noDuplicates,
+      formats: const [BarcodeFormat.qrCode],
+      facing: CameraFacing.back,
+      returnImage: false,
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleBarcode(String? value) async {
+    if (_handling) return;
+    _handling = true;
+    try {
+      if (value == null) return;
+      if (!value.startsWith('labour:')) return;
+      final id = value.substring('labour:'.length);
+      await _controller.stop();
+      if (!mounted) return;
+      Navigator.of(context).pop(id);
+    } finally {
+      _handling = false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Scan for Payment')),
+      body: MobileScanner(
+        controller: _controller,
+        onDetect: (capture) {
+          final barcodes = capture.barcodes;
+          if (barcodes.isEmpty) return;
+          final raw = barcodes.first.rawValue;
+          _handleBarcode(raw);
+        },
+        errorBuilder: (context, error) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text('Camera error: $error'),
+            ),
+          );
+        },
+        placeholderBuilder: (context) {
+          return const Center(child: CircularProgressIndicator());
+        },
+      ),
+    );
+  }
+}
 
 class PaymentPage extends StatelessWidget {
   const PaymentPage({super.key});
 
-  void _scan(BuildContext context, String type) async {
-    // Pass mode and type to ScanPage
+  void _scan(BuildContext context) async {
     final labourId = await Navigator.of(context).push<String>(
-      MaterialPageRoute(builder: (_) => ScanPage(mode: "payment", paymentType: type)),
+      MaterialPageRoute(builder: (_) => const PaymentScanPage()),
     );
     if (labourId == null) return;
-
     final store = context.read<LabourStore>();
+    store.addLift(labourId); // Only runs ONCE per scan!
+
     final labour = store.byId(labourId);
     if (labour == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -22,11 +93,17 @@ class PaymentPage extends StatelessWidget {
       );
       return;
     }
-
-    int amount = type == 'heavy' ? 50 : 30;
-    final total = labour.heavyPayments + labour.lowPayments;
+    final now = DateTime.now();
+    final todayStr = "${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+    final todayTotal = labour.dailyEarnings[todayStr] ?? 0;
+    final total = labour.totalEarnings;
+    final monthly = labour.monthlyEarnings(DateTime.now());
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${labour.name} received Rs $amount. Total: Rs $total')),
+      SnackBar(
+        content: Text(
+          '${labour.name} received Rs ${labour.perLiftPrice}. Today: Rs $todayTotal, Monthly: Rs $monthly, Total: Rs $total'
+        ),
+      ),
     );
   }
 
@@ -35,19 +112,9 @@ class PaymentPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Payment')),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            FilledButton(
-              onPressed: () => _scan(context, 'heavy'),
-              child: const Text('Heavy (Rs 50)'),
-            ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: () => _scan(context, 'low'),
-              child: const Text('Low (Rs 30)'),
-            ),
-          ],
+        child: FilledButton(
+          onPressed: () => _scan(context),
+          child: const Text('Scan'),
         ),
       ),
     );

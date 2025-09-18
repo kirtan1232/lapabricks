@@ -36,19 +36,39 @@ class LabourStore extends ChangeNotifier {
 
   Labour? byId(String id) => _labours[id];
 
-  Labour addLabour({required String name, required String details}) {
+  Labour addLabour({
+    required String name,
+    required String details,
+    required int perLiftPrice,
+  }) {
     final docRef = FirebaseFirestore.instance.collection('labours').doc();
-    final labour = Labour(id: docRef.id, name: name, details: details);
+    final labour = Labour(
+      id: docRef.id,
+      name: name,
+      details: details,
+      perLiftPrice: perLiftPrice,
+      attendance: [],
+      dailyEarnings: {},
+    );
     docRef.set(labour.toMap());
     _labours[labour.id] = labour;
     notifyListeners();
     return labour;
   }
 
-  void editLabour({required String id, required String name, required String details}) {
+  void editLabour({
+    required String id,
+    required String name,
+    required String details,
+    required int perLiftPrice,
+  }) {
     final labour = _labours[id];
     if (labour != null) {
-      final updatedLabour = labour.copyWith(name: name, details: details);
+      final updatedLabour = labour.copyWith(
+        name: name,
+        details: details,
+        perLiftPrice: perLiftPrice,
+      );
       FirebaseFirestore.instance.collection('labours').doc(id).set(updatedLabour.toMap());
       _labours[id] = updatedLabour;
       notifyListeners();
@@ -86,28 +106,20 @@ class LabourStore extends ChangeNotifier {
     return MarkAttendanceResult.success;
   }
 
-  void addHeavyPayment(String id, int amount) {
+  void addLift(String id) {
     final labour = _labours[id];
     if (labour != null) {
-      final updatedLabour = labour.copyWith(
-        heavyPayments: labour.heavyPayments + amount,
-      );
+      final now = DateTime.now();
+      final todayStr = "${now.year.toString().padLeft(4, '0')}-"
+          "${now.month.toString().padLeft(2, '0')}-"
+          "${now.day.toString().padLeft(2, '0')}";
+      final previousToday = labour.dailyEarnings[todayStr] ?? 0;
+      final dailyTotal = previousToday + labour.perLiftPrice;
+      final newDailyEarnings = Map<String, int>.from(labour.dailyEarnings);
+      newDailyEarnings[todayStr] = dailyTotal;
+      final updatedLabour = labour.copyWith(dailyEarnings: newDailyEarnings);
       FirebaseFirestore.instance.collection('labours').doc(id).update({
-        'heavyPayments': updatedLabour.heavyPayments,
-      });
-      _labours[id] = updatedLabour;
-      notifyListeners();
-    }
-  }
-
-  void addLowPayment(String id, int amount) {
-    final labour = _labours[id];
-    if (labour != null) {
-      final updatedLabour = labour.copyWith(
-        lowPayments: labour.lowPayments + amount,
-      );
-      FirebaseFirestore.instance.collection('labours').doc(id).update({
-        'lowPayments': updatedLabour.lowPayments,
+        'dailyEarnings': newDailyEarnings,
       });
       _labours[id] = updatedLabour;
       notifyListeners();

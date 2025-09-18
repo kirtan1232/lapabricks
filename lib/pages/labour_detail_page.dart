@@ -30,30 +30,9 @@ class LabourDetailPage extends StatelessWidget {
     return '+977-$phone';
   }
 
-  Future<void> _confirmDelete(BuildContext context, Labour labour) async {
-    final store = context.read<LabourStore>();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Delete Person'),
-        content: const Text('Are you sure you want to delete this person? This cannot be undone.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed == true) {
-      store.deleteLabour(labour.id);
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Person deleted')),
-      );
-    }
+  String todayString() {
+    final now = DateTime.now();
+    return "${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
   }
 
   @override
@@ -69,6 +48,13 @@ class LabourDetailPage extends StatelessWidget {
 
     final qrData = 'labour:${labour.id}';
     final parsed = parseDetails(labour.details);
+
+    final todayEarnings = labour.dailyEarnings[todayString()] ?? 0;
+    final monthlyEarnings = labour.monthlyEarnings(DateTime.now());
+    final totalEarnings = labour.totalEarnings;
+    final liftDetail = parsed['Lift'] ?? '—';
+    final occupation = parsed['Occupation'] ?? '—';
+    final plateNumber = parsed['Vehicle Plate'];
 
     return Scaffold(
       appBar: AppBar(
@@ -93,7 +79,30 @@ class LabourDetailPage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.delete),
             tooltip: 'Delete',
-            onPressed: () => _confirmDelete(context, labour),
+            onPressed: () async {
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (_) => AlertDialog(
+                  title: const Text('Delete Person'),
+                  content: const Text('Are you sure you want to delete this person? This cannot be undone.'),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: const Text('Delete'),
+                    ),
+                  ],
+                ),
+              );
+              if (confirmed == true) {
+                store.deleteLabour(labour.id);
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Person deleted')),
+                );
+              }
+            },
           ),
         ],
       ),
@@ -124,7 +133,7 @@ class LabourDetailPage extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.badge),
               title: const Text('Occupation'),
-              subtitle: Text(parsed['Occupation'] ?? '—'),
+              subtitle: Text(occupation),
             ),
             ListTile(
               leading: const Icon(Icons.home),
@@ -136,6 +145,17 @@ class LabourDetailPage extends StatelessWidget {
               title: const Text('Phone'),
               subtitle: Text(formatPhone(parsed['Phone'])),
             ),
+            ListTile(
+              leading: const Icon(Icons.factory), // Icon for lifting goods
+              title: const Text('Lift Details'),
+              subtitle: Text(liftDetail),
+            ),
+            if (occupation == 'Driver' && plateNumber != null && plateNumber.isNotEmpty)
+              ListTile(
+                leading: const Icon(Icons.local_shipping), // Truck/vehicle icon
+                title: const Text('Vehicle Plate'),
+                subtitle: Text(plateNumber),
+              ),
             const SizedBox(height: 24),
             Text(
               'Attendance (${labour.attendance.length})',
@@ -158,19 +178,24 @@ class LabourDetailPage extends StatelessWidget {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             ListTile(
-              leading: const Icon(Icons.payments),
-              title: const Text('Heavy Payment'),
-              subtitle: Text('Rs ${labour.heavyPayments}'),
+              leading: const Icon(Icons.price_change),
+              title: const Text('Per Lift Price'),
+              subtitle: Text('Rs ${labour.perLiftPrice}'),
             ),
             ListTile(
-              leading: const Icon(Icons.payments_outlined),
-              title: const Text('Low Payment'),
-              subtitle: Text('Rs ${labour.lowPayments}'),
+              leading: const Icon(Icons.today),
+              title: const Text('Today\'s Earnings'),
+              subtitle: Text('Rs $todayEarnings'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.calendar_today),
+              title: const Text('Monthly Earnings'),
+              subtitle: Text('Rs $monthlyEarnings'),
             ),
             ListTile(
               leading: const Icon(Icons.summarize),
-              title: const Text('Total Payment'),
-              subtitle: Text('Rs ${labour.heavyPayments + labour.lowPayments}'),
+              title: const Text('Total Earnings'),
+              subtitle: Text('Rs $totalEarnings'),
             ),
           ],
         ),

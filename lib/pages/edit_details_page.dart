@@ -16,9 +16,12 @@ class _EditDetailsPageState extends State<EditDetailsPage> {
   late TextEditingController _nameCtrl;
   late TextEditingController _addressCtrl;
   late TextEditingController _phoneCtrl;
+  late TextEditingController _liftCtrl;
+  late TextEditingController _perLiftPriceCtrl;
   String _occupation = 'Labour'; // default
+  String? _vehicleNumber;
 
-  static const List<String> occupations = ['Labour', 'Manager', 'Assistant'];
+  static const List<String> occupations = ['Labour', 'Driver'];
 
   @override
   void initState() {
@@ -53,6 +56,10 @@ class _EditDetailsPageState extends State<EditDetailsPage> {
       phone = phone.replaceFirst('+977', '');
     }
     _phoneCtrl = TextEditingController(text: phone);
+
+    _vehicleNumber = parsed['Vehicle Plate'];
+    _liftCtrl = TextEditingController(text: parsed['Lift'] ?? '');
+    _perLiftPriceCtrl = TextEditingController(text: labour?.perLiftPrice.toString() ?? '');
   }
 
   @override
@@ -60,18 +67,81 @@ class _EditDetailsPageState extends State<EditDetailsPage> {
     _nameCtrl.dispose();
     _addressCtrl.dispose();
     _phoneCtrl.dispose();
+    _liftCtrl.dispose();
+    _perLiftPriceCtrl.dispose();
     super.dispose();
   }
 
+  Future<void> _askVehicleNumber() async {
+    String? enteredNumber;
+    await showDialog(
+      context: context,
+      builder: (context) {
+        final vehicleCtrl = TextEditingController();
+        return AlertDialog(
+          title: const Text('Enter Vehicle Plate Number'),
+          content: TextFormField(
+            controller: vehicleCtrl,
+            keyboardType: TextInputType.number,
+            maxLength: 4,
+            decoration: const InputDecoration(
+              labelText: '4-digit plate number',
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) return 'Enter number';
+              if (!RegExp(r'^\d{4}$').hasMatch(value)) {
+                return 'Enter exactly 4 digits';
+              }
+              return null;
+            },
+          ),
+          actions: [
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                if (RegExp(r'^\d{4}$').hasMatch(vehicleCtrl.text)) {
+                  enteredNumber = vehicleCtrl.text;
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+    setState(() {
+      _vehicleNumber = enteredNumber;
+    });
+  }
+
   void _save() {
+    if (_occupation == 'Driver' && (_vehicleNumber == null || !_vehicleNumber!.contains(RegExp(r'^\d{4}$')))) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter valid 4-digit vehicle plate number for Driver'), backgroundColor: Colors.red),
+      );
+      return;
+    }
     if (_formKey.currentState?.validate() ?? false) {
       final store = context.read<LabourStore>();
-      final details =
-          'Occupation: $_occupation\nAddress: ${_addressCtrl.text.trim()}\nPhone: +977-${_phoneCtrl.text.trim()}';
+      final details = [
+        'Occupation: $_occupation',
+        'Address: ${_addressCtrl.text.trim()}',
+        'Phone: +977-${_phoneCtrl.text.trim()}',
+        if (_occupation == 'Driver') 'Vehicle Plate: $_vehicleNumber',
+        'Lift: ${_liftCtrl.text.trim()}',
+      ].join('\n');
+
+      final perLiftPrice = int.tryParse(_perLiftPriceCtrl.text.trim()) ?? 0;
+
       store.editLabour(
         id: widget.labourId,
         name: _nameCtrl.text.trim(),
         details: details,
+        perLiftPrice: perLiftPrice,
       );
       Navigator.of(context).pop(true);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -117,13 +187,28 @@ class _EditDetailsPageState extends State<EditDetailsPage> {
                   labelText: 'Occupation',
                   border: OutlineInputBorder(),
                 ),
-                onChanged: (v) {
+                onChanged: (v) async {
                   setState(() {
                     _occupation = v ?? 'Labour';
                   });
+                  if (v == 'Driver') {
+                    await _askVehicleNumber();
+                  } else {
+                    setState(() {
+                      _vehicleNumber = null;
+                    });
+                  }
                 },
                 validator: (v) => v == null || v.isEmpty ? 'Select occupation' : null,
               ),
+              if (_occupation == 'Driver' && _vehicleNumber != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    'Vehicle Plate: $_vehicleNumber',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _addressCtrl,
@@ -167,6 +252,34 @@ class _EditDetailsPageState extends State<EditDetailsPage> {
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _liftCtrl,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Lift',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'Enter lift';
+                  if (!RegExp(r'^[0-9]+$').hasMatch(v)) return 'Only numbers allowed';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _perLiftPriceCtrl,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Per Lift Price',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'Enter price';
+                  if (!RegExp(r'^[0-9]+$').hasMatch(v)) return 'Only numbers allowed';
+                  return null;
+                },
               ),
               const SizedBox(height: 24),
               FilledButton(

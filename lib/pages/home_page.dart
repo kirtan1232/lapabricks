@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/labour_store.dart';
 import 'add_labour_page.dart';
 import 'labour_detail_page.dart';
-import 'scan_page.dart';
+import 'attendance_scan.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -26,7 +26,7 @@ class HomePage extends StatelessWidget {
             tooltip: 'Scan QR',
             icon: const Icon(Icons.qr_code_scanner),
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const ScanPage()),
+              MaterialPageRoute(builder: (_) => const AttendanceScanPage()),
             ),
           ),
         ],

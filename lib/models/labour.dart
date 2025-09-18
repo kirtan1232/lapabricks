@@ -3,43 +3,53 @@ class Labour {
   final String name;
   final String details;
   final List<DateTime> attendance;
-  final int heavyPayments;
-  final int lowPayments;
+  final int perLiftPrice;
+  final Map<String, int> dailyEarnings; // key: 'yyyy-MM-dd', value: total for that day
 
   Labour({
     required this.id,
     required this.name,
     required this.details,
     this.attendance = const [],
-    this.heavyPayments = 0,
-    this.lowPayments = 0,
+    required this.perLiftPrice,
+    this.dailyEarnings = const {},
   });
+
+  int get totalEarnings => dailyEarnings.values.fold(0, (a, b) => a + b);
+
+  int monthlyEarnings(DateTime month) {
+    final monthStr = "${month.year.toString().padLeft(4, '0')}-${month.month.toString().padLeft(2, '0')}";
+    return dailyEarnings.entries
+      .where((e) => e.key.startsWith(monthStr))
+      .fold(0, (a, b) => a + b.value);
+  }
 
   Labour copyWith({
     String? id,
     String? name,
     String? details,
     List<DateTime>? attendance,
-    int? heavyPayments,
-    int? lowPayments,
+    int? perLiftPrice,
+    Map<String, int>? dailyEarnings,
   }) {
     return Labour(
       id: id ?? this.id,
       name: name ?? this.name,
       details: details ?? this.details,
       attendance: attendance ?? this.attendance,
-      heavyPayments: heavyPayments ?? this.heavyPayments,
-      lowPayments: lowPayments ?? this.lowPayments,
+      perLiftPrice: perLiftPrice ?? this.perLiftPrice,
+      dailyEarnings: dailyEarnings ?? this.dailyEarnings,
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'name': name,
       'details': details,
       'attendance': attendance.map((d) => d.toIso8601String()).toList(),
-      'heavyPayments': heavyPayments,
-      'lowPayments': lowPayments,
+      'perLiftPrice': perLiftPrice,
+      'dailyEarnings': dailyEarnings,
     };
   }
 
@@ -49,8 +59,8 @@ class Labour {
       name: map['name'] ?? '',
       details: map['details'] ?? '',
       attendance: (map['attendance'] as List<dynamic>? ?? []).map((d) => DateTime.parse(d as String)).toList(),
-      heavyPayments: map['heavyPayments'] ?? 0,
-      lowPayments: map['lowPayments'] ?? 0,
+      perLiftPrice: map['perLiftPrice'] ?? 0,
+      dailyEarnings: Map<String, int>.from(map['dailyEarnings'] ?? {}),
     );
   }
 }
