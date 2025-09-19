@@ -48,7 +48,7 @@ class LabourStore extends ChangeNotifier {
       details: details,
       perLiftPrice: perLiftPrice,
       attendance: [],
-      dailyEarnings: {},
+      dailyRecords: {},
     );
     docRef.set(labour.toMap());
     _labours[labour.id] = labour;
@@ -107,27 +107,25 @@ class LabourStore extends ChangeNotifier {
   }
 
   void addLift(String id) {
-  final labour = _labours[id];
-  if (labour != null) {
-    final now = DateTime.now();
-    final todayStr = "${now.year.toString().padLeft(4, '0')}-"
-        "${now.month.toString().padLeft(2, '0')}-"
-        "${now.day.toString().padLeft(2, '0')}";
-    final previousTodayEarnings = labour.dailyEarnings[todayStr] ?? 0;
-    final previousTodayLifts = labour.dailyLifts[todayStr] ?? 0;
-    final dailyTotalEarnings = previousTodayEarnings + labour.perLiftPrice;
-    final dailyTotalLifts = previousTodayLifts + 1;
-    final newDailyEarnings = Map<String, int>.from(labour.dailyEarnings);
-    final newDailyLifts = Map<String, int>.from(labour.dailyLifts);
-    newDailyEarnings[todayStr] = dailyTotalEarnings;
-    newDailyLifts[todayStr] = dailyTotalLifts;
-    final updatedLabour = labour.copyWith(dailyEarnings: newDailyEarnings, dailyLifts: newDailyLifts);
-    FirebaseFirestore.instance.collection('labours').doc(id).update({
-      'dailyEarnings': newDailyEarnings,
-      'dailyLifts': newDailyLifts,
-    });
-    _labours[id] = updatedLabour;
-    notifyListeners();
+    final labour = _labours[id];
+    if (labour != null) {
+      final now = DateTime.now();
+      final todayStr = "${now.year.toString().padLeft(4, '0')}-"
+          "${now.month.toString().padLeft(2, '0')}-"
+          "${now.day.toString().padLeft(2, '0')}";
+      final prev = labour.dailyRecords[todayStr] ?? {'earnings': 0, 'lifts': 0};
+      final newRecord = {
+        'earnings': (prev['earnings'] ?? 0) + labour.perLiftPrice,
+        'lifts': (prev['lifts'] ?? 0) + 1,
+      };
+      final newDailyRecords = Map<String, Map<String, int>>.from(labour.dailyRecords);
+      newDailyRecords[todayStr] = newRecord;
+      final updatedLabour = labour.copyWith(dailyRecords: newDailyRecords);
+      FirebaseFirestore.instance.collection('labours').doc(id).update({
+        'dailyRecords': newDailyRecords,
+      });
+      _labours[id] = updatedLabour;
+      notifyListeners();
+    }
   }
-}
 }

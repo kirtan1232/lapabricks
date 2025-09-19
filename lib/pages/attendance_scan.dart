@@ -63,42 +63,34 @@ class _AttendanceScanPageState extends State<AttendanceScanPage> {
       }
 
       final id = value.substring('labour:'.length);
-
       final store = context.read<LabourStore>();
       final labour = store.byId(id);
+
       if (labour == null) {
         await _showInfoDialog('Labour not found', 'This QR does not match any labour profile.');
         return;
       }
 
-      final result = store.markAttendanceById(id);
+      // Mark attendance and add lift/payment regardless of attendance status
+      store.markAttendanceById(id);
+      store.addLift(id);
+
+      await _controller.stop();
       if (!mounted) return;
-      switch (result) {
-        case MarkAttendanceResult.success:
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Attendance marked')),
-          );
-          await _controller.stop();
-          if (!mounted) return;
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (_) => LabourDetailPage(labourId: id),
-            ),
-          );
-          break;
-        case MarkAttendanceResult.alreadyMarked:
-          await _showInfoDialog(
-            'Attendance already done',
-            'Attendance for this person is already recorded today.\nPlease scan again tomorrow.',
-          );
-          break;
-        case MarkAttendanceResult.notFound:
-          await _showInfoDialog(
-            'Labour not found',
-            'This QR does not match any labour profile.',
-          );
-          break;
-      }
+
+      // Show green snackbar with "Record Updated"
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Record Updated'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => LabourDetailPage(labourId: id),
+        ),
+      );
     } finally {
       _handling = false;
     }

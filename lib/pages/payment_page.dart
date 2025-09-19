@@ -95,13 +95,15 @@ class PaymentPage extends StatelessWidget {
     }
     final now = DateTime.now();
     final todayStr = "${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
-    final todayTotal = labour.dailyEarnings[todayStr] ?? 0;
+    final todayRecord = labour.dailyRecords[todayStr] ?? {};
+    final todayTotal = todayRecord['earnings'] ?? 0;
+    final todayLifts = todayRecord['lifts'] ?? 0;
     final total = labour.totalEarnings;
     final monthly = labour.monthlyEarnings(DateTime.now());
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          '${labour.name} received Rs ${labour.perLiftPrice}. Today: Rs $todayTotal, Monthly: Rs $monthly, Total: Rs $total'
+          '${labour.name} received Rs ${labour.perLiftPrice}. Today: Rs $todayTotal (Lifts: $todayLifts), Monthly: Rs $monthly, Total: Rs $total'
         ),
       ),
     );

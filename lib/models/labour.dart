@@ -4,8 +4,8 @@ class Labour {
   final String details;
   final List<DateTime> attendance;
   final int perLiftPrice;
-  final Map<String, int> dailyEarnings; // key: 'yyyy-MM-dd', value: total for that day
-  final Map<String, int> dailyLifts;    // key: 'yyyy-MM-dd', value: scan count for that day
+  // key: 'yyyy-MM-dd', value: { 'earnings': X, 'lifts': Y }
+  final Map<String, Map<String, int>> dailyRecords;
 
   Labour({
     required this.id,
@@ -13,17 +13,16 @@ class Labour {
     required this.details,
     this.attendance = const [],
     required this.perLiftPrice,
-    this.dailyEarnings = const {},
-    this.dailyLifts = const {},
+    this.dailyRecords = const {},
   });
 
-  int get totalEarnings => dailyEarnings.values.fold(0, (a, b) => a + b);
+  int get totalEarnings => dailyRecords.values.fold(0, (a, b) => a + (b['earnings'] ?? 0));
 
   int monthlyEarnings(DateTime month) {
     final monthStr = "${month.year.toString().padLeft(4, '0')}-${month.month.toString().padLeft(2, '0')}";
-    return dailyEarnings.entries
+    return dailyRecords.entries
       .where((e) => e.key.startsWith(monthStr))
-      .fold(0, (a, b) => a + b.value);
+      .fold(0, (a, b) => a + (b.value['earnings'] ?? 0));
   }
 
   Labour copyWith({
@@ -32,8 +31,7 @@ class Labour {
     String? details,
     List<DateTime>? attendance,
     int? perLiftPrice,
-    Map<String, int>? dailyEarnings,
-    Map<String, int>? dailyLifts,
+    Map<String, Map<String, int>>? dailyRecords,
   }) {
     return Labour(
       id: id ?? this.id,
@@ -41,8 +39,7 @@ class Labour {
       details: details ?? this.details,
       attendance: attendance ?? this.attendance,
       perLiftPrice: perLiftPrice ?? this.perLiftPrice,
-      dailyEarnings: dailyEarnings ?? this.dailyEarnings,
-      dailyLifts: dailyLifts ?? this.dailyLifts,
+      dailyRecords: dailyRecords ?? this.dailyRecords,
     );
   }
 
@@ -53,8 +50,7 @@ class Labour {
       'details': details,
       'attendance': attendance.map((d) => d.toIso8601String()).toList(),
       'perLiftPrice': perLiftPrice,
-      'dailyEarnings': dailyEarnings,
-      'dailyLifts': dailyLifts,
+      'dailyRecords': dailyRecords,
     };
   }
 
@@ -65,8 +61,9 @@ class Labour {
       details: map['details'] ?? '',
       attendance: (map['attendance'] as List<dynamic>? ?? []).map((d) => DateTime.parse(d as String)).toList(),
       perLiftPrice: map['perLiftPrice'] ?? 0,
-      dailyEarnings: Map<String, int>.from(map['dailyEarnings'] ?? {}),
-      dailyLifts: Map<String, int>.from(map['dailyLifts'] ?? {}),
+      dailyRecords: Map<String, Map<String, int>>.from(
+        (map['dailyRecords'] ?? {}).map((k, v) => MapEntry(k, Map<String, int>.from(v)))
+      ),
     );
   }
 }

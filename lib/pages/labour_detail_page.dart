@@ -4,6 +4,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../models/labour.dart';
 import '../providers/labour_store.dart';
 import 'edit_details_page.dart';
+import 'statement_page.dart'; // <-- Import your statement page
 
 class LabourDetailPage extends StatelessWidget {
   final String labourId;
@@ -50,10 +51,9 @@ class LabourDetailPage extends StatelessWidget {
     final parsed = parseDetails(labour.details);
 
     final todayStr = todayString();
-    final todayEarnings = labour.dailyEarnings[todayStr] ?? 0;
-    final todayLifts = (labour.dailyLifts != null)
-        ? (labour.dailyLifts[todayStr] ?? 0)
-        : 0;
+    final todayRecord = labour.dailyRecords[todayStr] ?? {};
+    final todayEarnings = todayRecord['earnings'] ?? 0;
+    final todayLifts = todayRecord['lifts'] ?? 0;
     final monthlyEarnings = labour.monthlyEarnings(DateTime.now());
     final totalEarnings = labour.totalEarnings;
     final liftDetail = parsed['Lift'] ?? '—';
@@ -64,6 +64,17 @@ class LabourDetailPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Person Details'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.stacked_line_chart),
+            tooltip: 'Statement',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => StatementPage(labour: labour),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.edit),
             tooltip: 'Edit',
@@ -150,13 +161,13 @@ class LabourDetailPage extends StatelessWidget {
               subtitle: Text(formatPhone(parsed['Phone'])),
             ),
             ListTile(
-              leading: const Icon(Icons.factory), // Icon for lifting goods
+              leading: const Icon(Icons.factory),
               title: const Text('Lift Details'),
               subtitle: Text(liftDetail),
             ),
             if (occupation == 'Driver' && plateNumber != null && plateNumber.isNotEmpty)
               ListTile(
-                leading: const Icon(Icons.local_shipping), // Truck/vehicle icon
+                leading: const Icon(Icons.local_shipping),
                 title: const Text('Vehicle Plate'),
                 subtitle: Text(plateNumber),
               ),
@@ -190,7 +201,6 @@ class LabourDetailPage extends StatelessWidget {
               leading: const Icon(Icons.today),
               title: const Text("Today's Earnings"),
               subtitle: Text('Rs $todayEarnings  (Lifts: $todayLifts)'),
-              
             ),
             ListTile(
               leading: const Icon(Icons.calendar_today),
