@@ -1,11 +1,10 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:local_auth/local_auth.dart';
-
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'register_page.dart';
 import 'app.dart';
 import 'forgot_password_page.dart';
-import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -64,11 +63,14 @@ class _LoginPageState extends State<LoginPage> {
     final LocalAuthentication auth = LocalAuthentication();
     bool didAuthenticate = false;
     try {
+      print('Starting fingerprint authentication...');
       didAuthenticate = await auth.authenticate(
         localizedReason: 'Authenticate with fingerprint to login',
         options: const AuthenticationOptions(biometricOnly: true),
       );
+      print('didAuthenticate: $didAuthenticate');
     } catch (e) {
+      print('Fingerprint error: $e');
       showMessage('Fingerprint not available in this device.', false);
       return;
     }
@@ -88,10 +90,7 @@ class _LoginPageState extends State<LoginPage> {
           );
         } on FirebaseAuthException catch (e) {
           // If password changed or credentials invalid, force manual login
-          showMessage(
-            'Password changed. Please login with credentials.',
-            false,
-          );
+          showMessage('Password changed. Please login with credentials.', false);
           await _storage.delete(key: 'email');
           await _storage.delete(key: 'password');
         }
