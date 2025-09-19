@@ -5,6 +5,7 @@ class Labour {
   final List<DateTime> attendance;
   final int perLiftPrice;
   final Map<String, int> dailyEarnings; // key: 'yyyy-MM-dd', value: total for that day
+  final Map<String, int> dailyLifts;    // key: 'yyyy-MM-dd', value: scan count for that day
 
   Labour({
     required this.id,
@@ -13,6 +14,7 @@ class Labour {
     this.attendance = const [],
     required this.perLiftPrice,
     this.dailyEarnings = const {},
+    this.dailyLifts = const {},
   });
 
   int get totalEarnings => dailyEarnings.values.fold(0, (a, b) => a + b);
@@ -31,6 +33,7 @@ class Labour {
     List<DateTime>? attendance,
     int? perLiftPrice,
     Map<String, int>? dailyEarnings,
+    Map<String, int>? dailyLifts,
   }) {
     return Labour(
       id: id ?? this.id,
@@ -39,6 +42,7 @@ class Labour {
       attendance: attendance ?? this.attendance,
       perLiftPrice: perLiftPrice ?? this.perLiftPrice,
       dailyEarnings: dailyEarnings ?? this.dailyEarnings,
+      dailyLifts: dailyLifts ?? this.dailyLifts,
     );
   }
 
@@ -50,6 +54,7 @@ class Labour {
       'attendance': attendance.map((d) => d.toIso8601String()).toList(),
       'perLiftPrice': perLiftPrice,
       'dailyEarnings': dailyEarnings,
+      'dailyLifts': dailyLifts,
     };
   }
 
@@ -61,6 +66,7 @@ class Labour {
       attendance: (map['attendance'] as List<dynamic>? ?? []).map((d) => DateTime.parse(d as String)).toList(),
       perLiftPrice: map['perLiftPrice'] ?? 0,
       dailyEarnings: Map<String, int>.from(map['dailyEarnings'] ?? {}),
+      dailyLifts: Map<String, int>.from(map['dailyLifts'] ?? {}),
     );
   }
 }

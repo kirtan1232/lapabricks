@@ -49,7 +49,11 @@ class LabourDetailPage extends StatelessWidget {
     final qrData = 'labour:${labour.id}';
     final parsed = parseDetails(labour.details);
 
-    final todayEarnings = labour.dailyEarnings[todayString()] ?? 0;
+    final todayStr = todayString();
+    final todayEarnings = labour.dailyEarnings[todayStr] ?? 0;
+    final todayLifts = (labour.dailyLifts != null)
+        ? (labour.dailyLifts[todayStr] ?? 0)
+        : 0;
     final monthlyEarnings = labour.monthlyEarnings(DateTime.now());
     final totalEarnings = labour.totalEarnings;
     final liftDetail = parsed['Lift'] ?? '—';
@@ -184,8 +188,9 @@ class LabourDetailPage extends StatelessWidget {
             ),
             ListTile(
               leading: const Icon(Icons.today),
-              title: const Text('Today\'s Earnings'),
-              subtitle: Text('Rs $todayEarnings'),
+              title: const Text("Today's Earnings"),
+              subtitle: Text('Rs $todayEarnings  (Lifts: $todayLifts)'),
+              
             ),
             ListTile(
               leading: const Icon(Icons.calendar_today),

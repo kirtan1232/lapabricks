@@ -107,22 +107,27 @@ class LabourStore extends ChangeNotifier {
   }
 
   void addLift(String id) {
-    final labour = _labours[id];
-    if (labour != null) {
-      final now = DateTime.now();
-      final todayStr = "${now.year.toString().padLeft(4, '0')}-"
-          "${now.month.toString().padLeft(2, '0')}-"
-          "${now.day.toString().padLeft(2, '0')}";
-      final previousToday = labour.dailyEarnings[todayStr] ?? 0;
-      final dailyTotal = previousToday + labour.perLiftPrice;
-      final newDailyEarnings = Map<String, int>.from(labour.dailyEarnings);
-      newDailyEarnings[todayStr] = dailyTotal;
-      final updatedLabour = labour.copyWith(dailyEarnings: newDailyEarnings);
-      FirebaseFirestore.instance.collection('labours').doc(id).update({
-        'dailyEarnings': newDailyEarnings,
-      });
-      _labours[id] = updatedLabour;
-      notifyListeners();
-    }
+  final labour = _labours[id];
+  if (labour != null) {
+    final now = DateTime.now();
+    final todayStr = "${now.year.toString().padLeft(4, '0')}-"
+        "${now.month.toString().padLeft(2, '0')}-"
+        "${now.day.toString().padLeft(2, '0')}";
+    final previousTodayEarnings = labour.dailyEarnings[todayStr] ?? 0;
+    final previousTodayLifts = labour.dailyLifts[todayStr] ?? 0;
+    final dailyTotalEarnings = previousTodayEarnings + labour.perLiftPrice;
+    final dailyTotalLifts = previousTodayLifts + 1;
+    final newDailyEarnings = Map<String, int>.from(labour.dailyEarnings);
+    final newDailyLifts = Map<String, int>.from(labour.dailyLifts);
+    newDailyEarnings[todayStr] = dailyTotalEarnings;
+    newDailyLifts[todayStr] = dailyTotalLifts;
+    final updatedLabour = labour.copyWith(dailyEarnings: newDailyEarnings, dailyLifts: newDailyLifts);
+    FirebaseFirestore.instance.collection('labours').doc(id).update({
+      'dailyEarnings': newDailyEarnings,
+      'dailyLifts': newDailyLifts,
+    });
+    _labours[id] = updatedLabour;
+    notifyListeners();
   }
+}
 }
