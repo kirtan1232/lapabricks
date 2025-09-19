@@ -6,7 +6,6 @@ import 'package:lapabricks/pages/register_page.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-
 class LapaLoginPage extends StatefulWidget {
   const LapaLoginPage({super.key});
   @override
@@ -17,7 +16,6 @@ class _LapaLoginPageState extends State<LapaLoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   bool passwordVisible = false;
-
   final _storage = const FlutterSecureStorage();
 
   Future<void> login() async {
@@ -62,14 +60,11 @@ class _LapaLoginPageState extends State<LapaLoginPage> {
     final LocalAuthentication auth = LocalAuthentication();
     bool didAuthenticate = false;
     try {
-      print('Starting fingerprint authentication...');
       didAuthenticate = await auth.authenticate(
         localizedReason: 'Authenticate with fingerprint to login',
         options: const AuthenticationOptions(biometricOnly: true),
       );
-      print('didAuthenticate: $didAuthenticate');
     } catch (e) {
-      print('Fingerprint error: $e');
       showMessage('Fingerprint not available in this device.', false);
       return;
     }
@@ -118,85 +113,220 @@ class _LapaLoginPageState extends State<LapaLoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    const Color cream = Color(0xFFFFF6E5);
+    const Color lightOrange = Color(0xFFFFB74D);
+    const Color orangeAccent = Color(0xFFFF9800);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ListView(
-          children: [
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
-            ),
-            TextField(
-              controller: passwordController,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    passwordVisible ? Icons.visibility : Icons.visibility_off,
-                  ),
-                  onPressed: () {
-                    setState(() => passwordVisible = !passwordVisible);
-                  },
+      backgroundColor: cream,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          double maxWidth = constraints.maxWidth < 500
+              ? constraints.maxWidth * 0.98
+              : constraints.maxWidth < 800
+                  ? 430
+                  : 600;
+
+          return Center(
+            child: SingleChildScrollView(
+              child: Container(
+                constraints: BoxConstraints(maxWidth: maxWidth),
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: [
+                    BoxShadow(
+                      color: lightOrange.withOpacity(0.13),
+                      blurRadius: 20,
+                      offset: const Offset(0, 7),
+                    ),
+                  ],
                 ),
-              ),
-              obscureText: !passwordVisible,
-            ),
-            const SizedBox(height: 16),
-            FutureBuilder(
-              future: hasSavedCredentials(),
-              builder: (context, snapshot) {
-                return Center(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        height: 40,
-                        width: 120,
-                        child: ElevatedButton(
-                          onPressed: login,
-                          child: const Text(
-                            'Login',
-                            style: TextStyle(fontSize: 16),
-                          ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Logo
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 18),
+                      child: SizedBox(
+                        height: 90,
+                        child: Image.asset(
+                          'assets/logo.png',
+                          fit: BoxFit.contain,
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      (snapshot.connectionState == ConnectionState.done &&
-                              snapshot.data == true)
-                          ? IconButton(
-                              icon: const Icon(
-                                Icons.fingerprint,
-                                size: 32,
-                                color: Colors.blueAccent,
+                    ),
+                    Text(
+                      'Welcome to LapaBricks',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            color: orangeAccent,
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Please login to continue',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.grey[700],
+                          ),
+                    ),
+                    const SizedBox(height: 24),
+                    // Email Input
+                    TextField(
+                      controller: emailController,
+                      style: const TextStyle(fontSize: 16),
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.email, color: orangeAccent),
+                        labelText: 'Email',
+                        filled: true,
+                        fillColor: cream,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: orangeAccent, width: 1),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Password Input
+                    TextField(
+                      controller: passwordController,
+                      style: const TextStyle(fontSize: 16),
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.lock, color: orangeAccent),
+                        labelText: 'Password',
+                        filled: true,
+                        fillColor: cream,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: orangeAccent, width: 1),
+                        ),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            passwordVisible ? Icons.visibility : Icons.visibility_off,
+                            color: orangeAccent,
+                          ),
+                          onPressed: () {
+                            setState(() => passwordVisible = !passwordVisible);
+                          },
+                        ),
+                      ),
+                      obscureText: !passwordVisible,
+                    ),
+                    const SizedBox(height: 18),
+                    FutureBuilder(
+                      future: hasSavedCredentials(),
+                      builder: (context, snapshot) {
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              height: 40,
+                              width: 120,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: lightOrange,
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                onPressed: login,
+                                child: const Text(
+                                  'Login',
+                                  style: TextStyle(fontSize: 16),
+                                ),
                               ),
-                              tooltip: 'Login with Fingerprint',
-                              onPressed: loginWithFingerprint,
-                            )
-                          : const SizedBox(width: 32),
-                    ],
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 24),
-            TextButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const RegisterPage()),
+                            ),
+                            const SizedBox(width: 14),
+                            (snapshot.connectionState == ConnectionState.done &&
+                                    snapshot.data == true)
+                                ? Tooltip(
+                                    message: 'Login with Fingerprint',
+                                    child: IconButton(
+                                      icon: const Icon(
+                                        Icons.fingerprint,
+                                        size: 32,
+                                        color: orangeAccent,
+                                      ),
+                                      onPressed: loginWithFingerprint,
+                                    ),
+                                  )
+                                : const SizedBox(width: 32),
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    // Divider with text
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Divider(
+                            color: Colors.orange[200],
+                            thickness: 1.2,
+                            endIndent: 10,
+                          ),
+                        ),
+                        Text(
+                          'or',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Expanded(
+                          child: Divider(
+                            color: Colors.orange[200],
+                            thickness: 1.2,
+                            indent: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    // Register and Forgot Password
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Flexible(
+                          child: TextButton.icon(
+                            icon: const Icon(Icons.person_add, color: orangeAccent),
+                            label: const Text('Create Account'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: orangeAccent,
+                            ),
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const RegisterPage()),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Flexible(
+                          child: TextButton.icon(
+                            icon: const Icon(Icons.lock_reset, color: orangeAccent),
+                            label: const Text('Forgot Password?'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: orangeAccent,
+                            ),
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                ),
               ),
-              child: const Text('Create Account'),
             ),
-            TextButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
-              ),
-              child: const Text('Forgot Password?'),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
