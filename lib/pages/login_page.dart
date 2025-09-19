@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:lapabricks/pages/app.dart';
+import 'package:lapabricks/pages/forgot_password_page.dart';
+import 'package:lapabricks/pages/register_page.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'register_page.dart';
-import 'app.dart';
-import 'forgot_password_page.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+
+class LapaLoginPage extends StatefulWidget {
+  const LapaLoginPage({super.key});
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<LapaLoginPage> createState() => _LapaLoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LapaLoginPageState extends State<LapaLoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   bool passwordVisible = false;
 
-  // Secure storage instance
   final _storage = const FlutterSecureStorage();
 
   Future<void> login() async {
@@ -36,7 +36,6 @@ class _LoginPageState extends State<LoginPage> {
       );
       showMessage('Login Successful!', true);
 
-      // Store credentials securely for fingerprint login
       await _storage.write(key: 'email', value: email);
       await _storage.write(key: 'password', value: password);
 
@@ -89,7 +88,6 @@ class _LoginPageState extends State<LoginPage> {
             MaterialPageRoute(builder: (_) => const App()),
           );
         } on FirebaseAuthException catch (e) {
-          // If password changed or credentials invalid, force manual login
           showMessage('Password changed. Please login with credentials.', false);
           await _storage.delete(key: 'email');
           await _storage.delete(key: 'password');

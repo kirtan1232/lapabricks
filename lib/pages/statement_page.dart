@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/labour.dart';
+import 'package:lapabricks/models/labour.dart';
+
 
 class StatementPage extends StatelessWidget {
   final Labour labour;

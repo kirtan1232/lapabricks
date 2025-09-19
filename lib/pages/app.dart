@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:lapabricks/pages/home_page.dart';
+import 'package:lapabricks/pages/payment_page.dart';
 import 'package:lapabricks/pages/settings_page.dart';
-import 'home_page.dart';
-import 'payment_page.dart';
-import '../widgets/page_with_navbar.dart';
-import '../widgets/refreshbale_page.dart';
-import '../widgets/connectivity_gate.dart';
+import 'package:lapabricks/providers/labour_store.dart';
+import 'package:lapabricks/widgets/connectivity_gate.dart';
+import 'package:lapabricks/widgets/page_with_navbar.dart';
+import 'package:lapabricks/widgets/refreshbale_page.dart';
 import 'package:provider/provider.dart';
-import '../providers/labour_store.dart';
+
 
 class App extends StatefulWidget {
   const App({super.key});

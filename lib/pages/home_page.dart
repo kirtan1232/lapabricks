@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:lapabricks/pages/add_labour_page.dart';
+import 'package:lapabricks/pages/attendance_scan.dart';
+import 'package:lapabricks/pages/labour_detail_page.dart';
+import 'package:lapabricks/providers/labour_store.dart';
 import 'package:provider/provider.dart';
-import '../providers/labour_store.dart';
-import 'add_labour_page.dart';
-import 'labour_detail_page.dart';
-import 'attendance_scan.dart';
+
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});

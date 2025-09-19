@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'main_navbar.dart';
+import 'package:lapabricks/widgets/main_navbar.dart';
+
 
 class PageWithNavBar extends StatelessWidget {
   final int currentIndex;

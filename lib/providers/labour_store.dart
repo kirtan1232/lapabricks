@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/labour.dart';
+import 'package:lapabricks/models/labour.dart';
+
 
 enum MarkAttendanceResult { success, alreadyMarked, notFound }
 

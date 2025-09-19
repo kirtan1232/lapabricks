@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:lapabricks/providers/labour_store.dart';
 import 'package:provider/provider.dart';
-import '../models/labour.dart';
-import '../providers/labour_store.dart';
+
 
 class EditDetailsPage extends StatefulWidget {
   final String labourId;
@@ -20,8 +20,10 @@ class _EditDetailsPageState extends State<EditDetailsPage> {
   late TextEditingController _perLiftPriceCtrl;
   String _occupation = 'Labour'; // default
   String? _vehicleNumber;
+  String? _brickType; // <-- Added
 
   static const List<String> occupations = ['Labour', 'Driver'];
+  static const List<String> brickTypes = ['Kacho Brick', 'Pako Brick'];
 
   @override
   void initState() {
@@ -60,6 +62,7 @@ class _EditDetailsPageState extends State<EditDetailsPage> {
     _vehicleNumber = parsed['Vehicle Plate'];
     _liftCtrl = TextEditingController(text: parsed['Lift'] ?? '');
     _perLiftPriceCtrl = TextEditingController(text: labour?.perLiftPrice.toString() ?? '');
+    _brickType = brickTypes.contains(parsed['Brick Type']) ? parsed['Brick Type'] : null; // <-- Added
   }
 
   @override
@@ -133,6 +136,7 @@ class _EditDetailsPageState extends State<EditDetailsPage> {
         'Phone: +977-${_phoneCtrl.text.trim()}',
         if (_occupation == 'Driver') 'Vehicle Plate: $_vehicleNumber',
         'Lift: ${_liftCtrl.text.trim()}',
+        'Brick Type: ${_brickType ?? ''}', // <-- Added
       ].join('\n');
 
       final perLiftPrice = int.tryParse(_perLiftPriceCtrl.text.trim()) ?? 0;
@@ -252,6 +256,28 @@ class _EditDetailsPageState extends State<EditDetailsPage> {
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 12),
+              // Brick Type dropdown below phone number
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(
+                  labelText: 'Brick Type',
+                  border: OutlineInputBorder(),
+                ),
+                value: _brickType,
+                items: brickTypes
+                    .map((type) => DropdownMenuItem(
+                  value: type,
+                  child: Text(type),
+                ))
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _brickType = value;
+                  });
+                },
+                validator: (value) =>
+                (value == null || value.isEmpty) ? 'Select brick type' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(

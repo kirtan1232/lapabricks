@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'login_page.dart'; // Make sure this path is correct!
+import 'package:lapabricks/pages/login_page.dart';
+
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -55,7 +56,7 @@ class _RegisterPageState extends State<RegisterPage> {
       Future.delayed(const Duration(seconds: 1), () {
         if (mounted) {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const LoginPage()),
+            MaterialPageRoute(builder: (_) => LapaLoginPage()),
           );
         }
       });

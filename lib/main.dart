@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:lapabricks/pages/login_page.dart';
+import 'package:lapabricks/providers/labour_store.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'pages/app.dart';
-import 'providers/labour_store.dart';
-import 'pages/login_page.dart';
+
+
 
 void main() {
   runApp(const LabourApp());
@@ -43,7 +44,7 @@ class LabourApp extends StatelessWidget {
               useMaterial3: true,
               brightness: Brightness.light,
             ),
-            home: const LoginPage(), // Always go to LoginPage on app start/reload
+            home: const LapaLoginPage(), // <-- Use the prefix here
           ),
         );
       },

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:lapabricks/pages/labour_detail_page.dart';
+import 'package:lapabricks/providers/labour_store.dart';
 import 'package:provider/provider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import '../providers/labour_store.dart';
-import 'labour_detail_page.dart';
+
 
 class AddLabourPage extends StatefulWidget {
   const AddLabourPage({super.key});
@@ -21,8 +22,10 @@ class _AddLabourPageState extends State<AddLabourPage> {
   String _countryCode = '+977';
   String? _occupation;
   String? _vehicleNumber;
+  String? _brickType;
 
   final List<String> occupations = ['Labour', 'Driver'];
+  final List<String> brickTypes = ['Kacho Brick', 'Pako Brick'];
 
   @override
   void dispose() {
@@ -99,7 +102,8 @@ class _AddLabourPageState extends State<AddLabourPage> {
       return;
     }
 
-    if (_occupation == 'Driver' && (_vehicleNumber == null || !_vehicleNumber!.contains(RegExp(r'^\d{4}$')))) {
+    if (_occupation == 'Driver' &&
+        (_vehicleNumber == null || !_vehicleNumber!.contains(RegExp(r'^\d{4}$')))) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Enter valid 4-digit vehicle plate number for Driver'),
@@ -116,6 +120,7 @@ class _AddLabourPageState extends State<AddLabourPage> {
         'Phone: $_countryCode-${_phoneCtrl.text.trim()}',
         if (_occupation == 'Driver') 'Vehicle Plate: $_vehicleNumber',
         'Lift: ${_liftCtrl.text.trim()}',
+        'Brick Type: ${_brickType ?? ''}',
       ].join('\n');
 
       final store = context.read<LabourStore>();
@@ -151,7 +156,7 @@ class _AddLabourPageState extends State<AddLabourPage> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Enter name' : null,
+                (v == null || v.trim().isEmpty) ? 'Enter name' : null,
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
@@ -162,9 +167,9 @@ class _AddLabourPageState extends State<AddLabourPage> {
                 value: _occupation,
                 items: occupations
                     .map((occ) => DropdownMenuItem(
-                          value: occ,
-                          child: Text(occ),
-                        ))
+                  value: occ,
+                  child: Text(occ),
+                ))
                     .toList(),
                 onChanged: (value) async {
                   setState(() {
@@ -179,7 +184,7 @@ class _AddLabourPageState extends State<AddLabourPage> {
                   }
                 },
                 validator: (value) =>
-                    (value == null || value.isEmpty) ? 'Select occupation' : null,
+                (value == null || value.isEmpty) ? 'Select occupation' : null,
               ),
               if (_occupation == 'Driver' && _vehicleNumber != null)
                 Padding(
@@ -197,7 +202,7 @@ class _AddLabourPageState extends State<AddLabourPage> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Enter address' : null,
+                (v == null || v.trim().isEmpty) ? 'Enter address' : null,
               ),
               const SizedBox(height: 12),
               Row(
@@ -233,6 +238,27 @@ class _AddLabourPageState extends State<AddLabourPage> {
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(
+                  labelText: 'Brick Type',
+                  border: OutlineInputBorder(),
+                ),
+                value: _brickType,
+                items: brickTypes
+                    .map((type) => DropdownMenuItem(
+                  value: type,
+                  child: Text(type),
+                ))
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _brickType = value;
+                  });
+                },
+                validator: (value) =>
+                (value == null || value.isEmpty) ? 'Select brick type' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(

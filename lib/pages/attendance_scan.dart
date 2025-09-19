@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:lapabricks/pages/labour_detail_page.dart';
+import 'package:lapabricks/providers/labour_store.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
 
-import '../providers/labour_store.dart';
-import 'labour_detail_page.dart';
 
 class AttendanceScanPage extends StatefulWidget {
   const AttendanceScanPage({super.key});

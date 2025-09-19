@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:lapabricks/pages/edit_details_page.dart';
+import 'package:lapabricks/pages/statement_page.dart';
+import 'package:lapabricks/providers/labour_store.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import '../models/labour.dart';
-import '../providers/labour_store.dart';
-import 'edit_details_page.dart';
-import 'statement_page.dart'; // <-- Import your statement page
+// <-- Import your statement page
 
 class LabourDetailPage extends StatelessWidget {
   final String labourId;
@@ -59,6 +59,7 @@ class LabourDetailPage extends StatelessWidget {
     final liftDetail = parsed['Lift'] ?? '—';
     final occupation = parsed['Occupation'] ?? '—';
     final plateNumber = parsed['Vehicle Plate'];
+    final brickType = parsed['Brick Type'] ?? '—'; // <-- Added
 
     return Scaffold(
       appBar: AppBar(
@@ -171,6 +172,12 @@ class LabourDetailPage extends StatelessWidget {
                 title: const Text('Vehicle Plate'),
                 subtitle: Text(plateNumber),
               ),
+            // Brick Type below vehicle plate
+            ListTile(
+              leading: const Icon(Icons.category),
+              title: const Text('Brick Type'),
+              subtitle: Text(brickType),
+            ),
             const SizedBox(height: 24),
             Text(
               'Attendance (${labour.attendance.length})',
@@ -182,10 +189,10 @@ class LabourDetailPage extends StatelessWidget {
             else
               ...labour.attendance
                   .map((d) => ListTile(
-                        leading: const Icon(Icons.check_circle, color: Colors.green),
-                        title: Text(
-                            '${d.day.toString().padLeft(2, '0')}-${d.month.toString().padLeft(2, '0')}-${d.year}'),
-                      ))
+                leading: const Icon(Icons.check_circle, color: Colors.green),
+                title: Text(
+                    '${d.day.toString().padLeft(2, '0')}-${d.month.toString().padLeft(2, '0')}-${d.year}'),
+              ))
                   .toList(),
             const SizedBox(height: 24),
             Text(
