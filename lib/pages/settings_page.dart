@@ -48,7 +48,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _logout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
-    // Delete credentials for fingerprint login
     await _storage.delete(key: 'email');
     await _storage.delete(key: 'password');
     Navigator.of(context).pushAndRemoveUntil(
@@ -88,7 +87,6 @@ class _SettingsPageState extends State<SettingsPage> {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const EditProfilePage()),
     ).then((_) {
-      // Reload name after editing
       _loadUserName();
     });
   }
@@ -98,46 +96,105 @@ class _SettingsPageState extends State<SettingsPage> {
     final user = FirebaseAuth.instance.currentUser;
     final userEmail = user?.email ?? 'No email';
 
+    const Color orangeAccent = Color(0xFFFF9800);
+    const Color cream = Color(0xFFFFF6E5);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      backgroundColor: cream,
+      appBar: AppBar(
+        backgroundColor: orangeAccent,
+        title: const Text('Settings'),
+        elevation: 2,
+      ),
       body: loading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Profile', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 12),
-                  ListTile(
-                    leading: const Icon(Icons.person),
-                    title: Text(userName.isEmpty ? 'No Name' : userName),
-                    subtitle: const Text('Full Name'),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.email),
-                    title: Text(userEmail),
-                    subtitle: const Text('Email'),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.edit),
-                    title: const Text('Edit Profile'),
-                    onTap: () => _editProfile(context),
-                  ),
-                  const Divider(),
-                  const SizedBox(height: 24),
-                  Center(
-                    child: FilledButton.icon(
-                      icon: const Icon(Icons.logout),
-                      label: const Text('Logout'),
-                      onPressed: () => _showLogoutConfirmation(context),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
+          : Center(
+              child: SingleChildScrollView(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  padding: const EdgeInsets.all(24),
+                  child: Card(
+                    color: Colors.white,
+                    elevation: 7,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 34, horizontal: 28),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircleAvatar(
+                            radius: 40,
+                            backgroundColor: orangeAccent.withOpacity(0.15),
+                            child: Text(
+                              (userName.isNotEmpty ? userName[0].toUpperCase() : '?'),
+                              style: TextStyle(
+                                fontSize: 38,
+                                color: orangeAccent,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          Text(
+                            userName.isEmpty ? 'No Name' : userName,
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: orangeAccent,
+                                ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            userEmail,
+                            style: const TextStyle(
+                              color: Colors.black87,
+                              fontSize: 17,
+                            ),
+                          ),
+                          const SizedBox(height: 28),
+                          Divider(thickness: 1.2, color: orangeAccent.withOpacity(0.13)),
+                          const SizedBox(height: 18),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: orangeAccent,
+                                foregroundColor: Colors.white,
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                              icon: const Icon(Icons.edit),
+                              label: const Text('Edit Profile', style: TextStyle(fontSize: 16)),
+                              onPressed: () => _editProfile(context),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton.icon(
+                              icon: const Icon(Icons.logout),
+                              label: const Text('Logout', style: TextStyle(fontSize: 16)),
+                              onPressed: () => _showLogoutConfirmation(context),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                foregroundColor: Colors.white,
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ],
+                ),
               ),
             ),
     );

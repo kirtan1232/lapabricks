@@ -4,7 +4,6 @@ import 'package:lapabricks/pages/statement_page.dart';
 import 'package:lapabricks/providers/labour_store.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-// <-- Import your statement page
 
 class LabourDetailPage extends StatelessWidget {
   final String labourId;
@@ -41,10 +40,12 @@ class LabourDetailPage extends StatelessWidget {
     final store = context.watch<LabourStore>();
     final labour = store.byId(labourId);
 
+    const Color cream = Color(0xFFFFF6E5);
+    const Color orangeAccent = Color(0xFFFF9800);
+    const Color lightOrange = Color(0xFFFFB74D);
+
     if (labour == null) {
-      return const Scaffold(
-        body: Center(child: Text('Labour not found')),
-      );
+      return const Scaffold(body: Center(child: Text('Labour not found')));
     }
 
     final qrData = 'labour:${labour.id}';
@@ -52,6 +53,15 @@ class LabourDetailPage extends StatelessWidget {
 
     final todayStr = todayString();
     final todayRecord = labour.dailyRecords[todayStr] ?? {};
+    final todayAttendance = labour.attendance
+        .where(
+          (d) =>
+              d.year == DateTime.now().year &&
+              d.month == DateTime.now().month &&
+              d.day == DateTime.now().day,
+        )
+        .toList();
+
     final todayEarnings = todayRecord['earnings'] ?? 0;
     final todayLifts = todayRecord['lifts'] ?? 0;
     final monthlyEarnings = labour.monthlyEarnings(DateTime.now());
@@ -59,10 +69,12 @@ class LabourDetailPage extends StatelessWidget {
     final liftDetail = parsed['Lift'] ?? '—';
     final occupation = parsed['Occupation'] ?? '—';
     final plateNumber = parsed['Vehicle Plate'];
-    final brickType = parsed['Brick Type'] ?? '—'; // <-- Added
+    final brickType = parsed['Brick Type'] ?? '—';
 
     return Scaffold(
+      backgroundColor: cream,
       appBar: AppBar(
+        backgroundColor: orangeAccent,
         title: const Text('Person Details'),
         actions: [
           IconButton(
@@ -86,9 +98,9 @@ class LabourDetailPage extends StatelessWidget {
                 ),
               );
               if (result == true) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Person updated')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('Person updated')));
               }
             },
           ),
@@ -100,11 +112,18 @@ class LabourDetailPage extends StatelessWidget {
                 context: context,
                 builder: (_) => AlertDialog(
                   title: const Text('Delete Person'),
-                  content: const Text('Are you sure you want to delete this person? This cannot be undone.'),
+                  content: const Text(
+                    'Are you sure you want to delete this person? This cannot be undone.',
+                  ),
                   actions: [
-                    TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text('Cancel'),
+                    ),
                     ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                      ),
                       onPressed: () => Navigator.of(context).pop(true),
                       child: const Text('Delete'),
                     ),
@@ -114,113 +133,224 @@ class LabourDetailPage extends StatelessWidget {
               if (confirmed == true) {
                 store.deleteLabour(labour.id);
                 Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Person deleted')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('Person deleted')));
               }
             },
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ListView(
-          children: [
-            Center(
-              child: QrImageView(
-                data: qrData,
-                size: 220,
-                backgroundColor: Colors.white,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          double maxWidth = constraints.maxWidth < 550
+              ? constraints.maxWidth * 0.98
+              : constraints.maxWidth < 1000
+              ? 530
+              : 700;
+          return Center(
+            child: Container(
+              constraints: BoxConstraints(maxWidth: maxWidth),
+              child: ListView(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 24,
+                  horizontal: 14,
+                ),
+                children: [
+                  Center(
+                    child: Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      color: Colors.white,
+                      child: Padding(
+                        padding: const EdgeInsets.all(18),
+                        child: Column(
+                          children: [
+                            QrImageView(
+                              data: qrData,
+                              size: 200, // Bigger QR
+                              backgroundColor: Colors.white,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              labour.name,
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(
+                                    color: orangeAccent,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 23,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    'Profile',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: orangeAccent,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 9),
+                  Card(
+                    elevation: 1,
+                    color: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                    child: Column(
+                      children: [
+                        ListTile(
+                          leading: Icon(Icons.badge, color: orangeAccent),
+                          title: const Text('Occupation'),
+                          subtitle: Text(occupation),
+                        ),
+                        Divider(height: 1),
+                        ListTile(
+                          leading: Icon(Icons.home, color: lightOrange),
+                          title: const Text('Address'),
+                          subtitle: Text(parsed['Address'] ?? '—'),
+                        ),
+                        Divider(height: 1),
+                        ListTile(
+                          leading: Icon(Icons.phone, color: Colors.green),
+                          title: const Text('Phone'),
+                          subtitle: Text(formatPhone(parsed['Phone'])),
+                        ),
+                        Divider(height: 1),
+                        ListTile(
+                          leading: Icon(
+                            Icons.factory,
+                            color: Colors.deepPurple,
+                          ),
+                          title: const Text('Lift Details'),
+                          subtitle: Text(liftDetail),
+                        ),
+                        if (occupation == 'Driver' &&
+                            plateNumber != null &&
+                            plateNumber.isNotEmpty) ...[
+                          Divider(height: 1),
+                          ListTile(
+                            leading: Icon(
+                              Icons.local_shipping,
+                              color: Colors.blueAccent,
+                            ),
+                            title: const Text('Vehicle Plate'),
+                            subtitle: Text(plateNumber),
+                          ),
+                        ],
+                        Divider(height: 1),
+                        ListTile(
+                          leading: Icon(
+                            Icons.category,
+                            color: Colors.pinkAccent,
+                          ),
+                          title: const Text('Brick Type'),
+                          subtitle: Text(brickType),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  Text(
+                    'Today\'s Attendance',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: orangeAccent,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 9),
+                  Card(
+                    elevation: 1,
+                    color: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      child: todayAttendance.isEmpty
+                          ? ListTile(
+                              leading: Icon(
+                                Icons.info_outline,
+                                color: Colors.redAccent,
+                              ),
+                              title: const Text('No Attendance'),
+                            )
+                          : ListTile(
+                              leading: Icon(
+                                Icons.check_circle,
+                                color: Colors.green,
+                              ),
+                              title: Text(
+                                '${DateTime.now().day.toString().padLeft(2, '0')}-'
+                                '${DateTime.now().month.toString().padLeft(2, '0')}-'
+                                '${DateTime.now().year}',
+                              ),
+                              subtitle: Text('Attendance marked for today'),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  Text(
+                    'Payment Summary',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: orangeAccent,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 9),
+                  Card(
+                    elevation: 1,
+                    color: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                    child: Column(
+                      children: [
+                        ListTile(
+                          leading: Icon(
+                            Icons.price_change,
+                            color: Colors.green,
+                          ),
+                          title: const Text('Per Lift Price'),
+                          subtitle: Text('Rs ${labour.perLiftPrice}'),
+                        ),
+                        Divider(height: 1),
+                        ListTile(
+                          leading: Icon(Icons.today, color: lightOrange),
+                          title: const Text("Today's Earnings"),
+                          subtitle: Text(
+                            'Rs $todayEarnings  (Lifts: $todayLifts)',
+                          ),
+                        ),
+                        Divider(height: 1),
+                        ListTile(
+                          leading: Icon(
+                            Icons.calendar_today,
+                            color: Colors.blueAccent,
+                          ),
+                          title: const Text('Monthly Earnings'),
+                          subtitle: Text('Rs $monthlyEarnings'),
+                        ),
+                        Divider(height: 1),
+                        ListTile(
+                          leading: Icon(Icons.summarize, color: Colors.purple),
+                          title: const Text('Total Earnings'),
+                          subtitle: Text('Rs $totalEarnings'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 12),
-            Center(
-              child: Text(
-                labour.name,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Profile',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            ListTile(
-              leading: const Icon(Icons.badge),
-              title: const Text('Occupation'),
-              subtitle: Text(occupation),
-            ),
-            ListTile(
-              leading: const Icon(Icons.home),
-              title: const Text('Address'),
-              subtitle: Text(parsed['Address'] ?? '—'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.phone),
-              title: const Text('Phone'),
-              subtitle: Text(formatPhone(parsed['Phone'])),
-            ),
-            ListTile(
-              leading: const Icon(Icons.factory),
-              title: const Text('Lift Details'),
-              subtitle: Text(liftDetail),
-            ),
-            if (occupation == 'Driver' && plateNumber != null && plateNumber.isNotEmpty)
-              ListTile(
-                leading: const Icon(Icons.local_shipping),
-                title: const Text('Vehicle Plate'),
-                subtitle: Text(plateNumber),
-              ),
-            // Brick Type below vehicle plate
-            ListTile(
-              leading: const Icon(Icons.category),
-              title: const Text('Brick Type'),
-              subtitle: Text(brickType),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Attendance (${labour.attendance.length})',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            if (labour.attendance.isEmpty)
-              const Text('No attendance yet.')
-            else
-              ...labour.attendance
-                  .map((d) => ListTile(
-                leading: const Icon(Icons.check_circle, color: Colors.green),
-                title: Text(
-                    '${d.day.toString().padLeft(2, '0')}-${d.month.toString().padLeft(2, '0')}-${d.year}'),
-              ))
-                  .toList(),
-            const SizedBox(height: 24),
-            Text(
-              'Payment Summary',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            ListTile(
-              leading: const Icon(Icons.price_change),
-              title: const Text('Per Lift Price'),
-              subtitle: Text('Rs ${labour.perLiftPrice}'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.today),
-              title: const Text("Today's Earnings"),
-              subtitle: Text('Rs $todayEarnings  (Lifts: $todayLifts)'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.calendar_today),
-              title: const Text('Monthly Earnings'),
-              subtitle: Text('Rs $monthlyEarnings'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.summarize),
-              title: const Text('Total Earnings'),
-              subtitle: Text('Rs $totalEarnings'),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

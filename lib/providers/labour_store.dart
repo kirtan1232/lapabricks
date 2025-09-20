@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lapabricks/models/labour.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 
 enum MarkAttendanceResult { success, alreadyMarked, notFound }
 
@@ -10,14 +10,18 @@ class LabourStore extends ChangeNotifier {
   bool _loaded = false;
   bool get loaded => _loaded;
 
+  // This persists scan cooldowns
+  final Map<String, DateTime> scanCooldowns = {};
+
+  LabourStore() {
+    loadLaboursAsync();
+    _loadScanCooldowns();
+  }
+
   List<Labour> get labours {
     final sorted = _labours.values.toList()
       ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     return sorted;
-  }
-
-  LabourStore() {
-    loadLaboursAsync();
   }
 
   Future<void> loadLaboursAsync() async {
@@ -79,6 +83,8 @@ class LabourStore extends ChangeNotifier {
   void deleteLabour(String id) {
     FirebaseFirestore.instance.collection('labours').doc(id).delete();
     _labours.remove(id);
+    scanCooldowns.remove(id);
+    _saveScanCooldowns();
     notifyListeners();
   }
 
@@ -128,5 +134,40 @@ class LabourStore extends ChangeNotifier {
       _labours[id] = updatedLabour;
       notifyListeners();
     }
+  }
+
+  // ========== PERSISTENT COOLDOWN LOGIC ==========
+
+  Future<void> _loadScanCooldowns() async {
+    final prefs = await SharedPreferences.getInstance();
+    final mapString = prefs.getString('scanCooldowns');
+    if (mapString != null && mapString.isNotEmpty) {
+      final entries = mapString.split(';');
+      for (final entry in entries) {
+        final parts = entry.split(',');
+        if (parts.length == 2) {
+          final id = parts[0];
+          final time = DateTime.tryParse(parts[1]);
+          if (time != null) {
+            scanCooldowns[id] = time;
+          }
+        }
+      }
+    }
+  }
+
+  Future<void> _saveScanCooldowns() async {
+    final prefs = await SharedPreferences.getInstance();
+    // Store as "id,iso;id,iso;..." string
+    final entries = scanCooldowns.entries
+        .map((e) => '${e.key},${e.value.toIso8601String()}')
+        .join(';');
+    await prefs.setString('scanCooldowns', entries);
+  }
+
+  // Call this when scan occurs
+  Future<void> updateScanCooldown(String id, DateTime time) async {
+    scanCooldowns[id] = time;
+    await _saveScanCooldowns();
   }
 }

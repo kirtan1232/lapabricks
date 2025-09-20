@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:lapabricks/pages/home_page.dart';
-import 'package:lapabricks/pages/payment_page.dart';
+import 'package:lapabricks/pages/attendance_scan.dart';
 import 'package:lapabricks/pages/settings_page.dart';
 import 'package:lapabricks/providers/labour_store.dart';
 import 'package:lapabricks/widgets/connectivity_gate.dart';
 import 'package:lapabricks/widgets/page_with_navbar.dart';
 import 'package:lapabricks/widgets/refreshbale_page.dart';
 import 'package:provider/provider.dart';
-
 
 class App extends StatefulWidget {
   const App({super.key});
@@ -17,7 +16,7 @@ class App extends StatefulWidget {
 }
 
 class _AppState extends State<App> {
-  int _selectedIndex = 1; // Home in center
+  int _selectedIndex = 0; // Home is left and default
 
   void _onNavTap(int index) {
     setState(() {
@@ -30,17 +29,17 @@ class _AppState extends State<App> {
     await store.loadLaboursAsync();
   }
 
+  void _onQrTap() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const AttendanceScanPage()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget body;
     switch (_selectedIndex) {
       case 0:
-        body = RefreshablePage(
-          child: const PaymentPage(),
-          onRefresh: () => _refreshLabours(context),
-        );
-        break;
-      case 1:
         body = RefreshablePage(
           child: const HomePage(),
           onRefresh: () => _refreshLabours(context),
@@ -58,10 +57,10 @@ class _AppState extends State<App> {
           onRefresh: () => _refreshLabours(context),
         );
     }
-    // Wrap all pages in ConnectivityGate so if offline, the user is blocked
     return PageWithNavBar(
       currentIndex: _selectedIndex,
       onTap: _onNavTap,
+      onQrTap: _onQrTap,
       child: ConnectivityGate(child: body),
     );
   }
