@@ -40,9 +40,14 @@ class LabourDetailPage extends StatelessWidget {
     final store = context.watch<LabourStore>();
     final labour = store.byId(labourId);
 
-    const Color cream = Color(0xFFFFF6E5);
-    const Color orangeAccent = Color(0xFFFF9800);
-    const Color lightOrange = Color(0xFFFFB74D);
+    // Your modern color scheme
+    const Color primaryBlue = Color(0xFF2563EB);
+    const Color lightBlue = Color(0xFF3B82F6);
+    const Color accentTeal = Color(0xFF06B6D4);
+    const Color backgroundGray = Color(0xFFF8FAFC);
+    const Color cardWhite = Color(0xFFFFFFFF);
+    const Color darkGray = Color(0xFF1E293B);
+    const Color lightGray = Color(0xFF64748B);
 
     if (labour == null) {
       return const Scaffold(body: Center(child: Text('Labour not found')));
@@ -72,14 +77,23 @@ class LabourDetailPage extends StatelessWidget {
     final brickType = parsed['Brick Type'] ?? '—';
 
     return Scaffold(
-      backgroundColor: cream,
+      backgroundColor: backgroundGray,
       appBar: AppBar(
-        backgroundColor: orangeAccent,
-        title: const Text('Person Details'),
+        backgroundColor: cardWhite,
+        elevation: 0,
+        centerTitle: true,
+        title: Text(
+          'Person Details',
+          style: TextStyle(
+            color: primaryBlue,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.stacked_line_chart),
             tooltip: 'Statement',
+            color: accentTeal,
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -91,6 +105,7 @@ class LabourDetailPage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.edit),
             tooltip: 'Edit',
+            color: primaryBlue,
             onPressed: () async {
               final result = await Navigator.of(context).push(
                 MaterialPageRoute(
@@ -107,6 +122,7 @@ class LabourDetailPage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.delete),
             tooltip: 'Delete',
+            color: Colors.redAccent,
             onPressed: () async {
               final confirmed = await showDialog<bool>(
                 context: context,
@@ -141,216 +157,230 @@ class LabourDetailPage extends StatelessWidget {
           ),
         ],
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          double maxWidth = constraints.maxWidth < 550
-              ? constraints.maxWidth * 0.98
-              : constraints.maxWidth < 1000
-              ? 530
-              : 700;
-          return Center(
-            child: Container(
-              constraints: BoxConstraints(maxWidth: maxWidth),
-              child: ListView(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 24,
-                  horizontal: 14,
-                ),
-                children: [
-                  Center(
-                    child: Card(
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            double maxWidth = constraints.maxWidth < 550
+                ? constraints.maxWidth * 0.98
+                : constraints.maxWidth < 1000
+                    ? 540
+                    : 700;
+            return Center(
+              child: Container(
+                constraints: BoxConstraints(maxWidth: maxWidth),
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 24,
+                    horizontal: 14,
+                  ),
+                  children: [
+                    // Top QR + Name Card
+                    Card(
                       elevation: 2,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                      color: Colors.white,
+                      color: cardWhite,
                       child: Padding(
-                        padding: const EdgeInsets.all(18),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 24,
+                          horizontal: 24,
+                        ),
                         child: Column(
                           children: [
                             QrImageView(
                               data: qrData,
-                              size: 200, // Bigger QR
-                              backgroundColor: Colors.white,
+                              size: 130,
+                              backgroundColor: cardWhite,
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 18),
                             Text(
                               labour.name,
-                              style: Theme.of(context).textTheme.titleLarge
-                                  ?.copyWith(
-                                    color: orangeAccent,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 23,
-                                  ),
+                              style: TextStyle(
+                                color: primaryBlue,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 28,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            Container(
+                              height: 3,
+                              width: 60,
+                              margin: const EdgeInsets.only(top: 6),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [primaryBlue, accentTeal],
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                ),
+                                borderRadius: BorderRadius.circular(2),
+                              ),
                             ),
                           ],
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 18),
-                  Text(
-                    'Profile',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: orangeAccent,
-                      fontWeight: FontWeight.bold,
+                    const SizedBox(height: 22),
+
+                    // Profile Info
+                    Text(
+                      'Profile',
+                      style: TextStyle(
+                        color: accentTeal,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 9),
-                  Card(
-                    elevation: 1,
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(13),
-                    ),
-                    child: Column(
-                      children: [
-                        ListTile(
-                          leading: Icon(Icons.badge, color: orangeAccent),
-                          title: const Text('Occupation'),
-                          subtitle: Text(occupation),
-                        ),
-                        Divider(height: 1),
-                        ListTile(
-                          leading: Icon(Icons.home, color: lightOrange),
-                          title: const Text('Address'),
-                          subtitle: Text(parsed['Address'] ?? '—'),
-                        ),
-                        Divider(height: 1),
-                        ListTile(
-                          leading: Icon(Icons.phone, color: Colors.green),
-                          title: const Text('Phone'),
-                          subtitle: Text(formatPhone(parsed['Phone'])),
-                        ),
-                        Divider(height: 1),
-                        ListTile(
-                          leading: Icon(
-                            Icons.factory,
-                            color: Colors.deepPurple,
+                    const SizedBox(height: 10),
+                    Card(
+                      elevation: 1,
+                      color: cardWhite,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        children: [
+                          ListTile(
+                            leading: Icon(Icons.badge, color: primaryBlue),
+                            title: const Text('Occupation'),
+                            subtitle: Text(occupation),
                           ),
-                          title: const Text('Lift Details'),
-                          subtitle: Text(liftDetail),
-                        ),
-                        if (occupation == 'Driver' &&
-                            plateNumber != null &&
-                            plateNumber.isNotEmpty) ...[
                           Divider(height: 1),
                           ListTile(
-                            leading: Icon(
-                              Icons.local_shipping,
-                              color: Colors.blueAccent,
+                            leading: Icon(Icons.home, color: accentTeal),
+                            title: const Text('Address'),
+                            subtitle: Text(parsed['Address'] ?? '—'),
+                          ),
+                          Divider(height: 1),
+                          ListTile(
+                            leading: Icon(Icons.phone, color: Colors.green),
+                            title: const Text('Phone'),
+                            subtitle: Text(formatPhone(parsed['Phone'])),
+                          ),
+                          Divider(height: 1),
+                          ListTile(
+                            leading: Icon(Icons.factory, color: lightBlue),
+                            title: const Text('Lift Details'),
+                            subtitle: Text(liftDetail),
+                          ),
+                          if (occupation == 'Driver' &&
+                              plateNumber != null &&
+                              plateNumber.isNotEmpty) ...[
+                            Divider(height: 1),
+                            ListTile(
+                              leading: Icon(
+                                Icons.local_shipping,
+                                color: primaryBlue,
+                              ),
+                              title: const Text('Vehicle Plate'),
+                              subtitle: Text(plateNumber),
                             ),
-                            title: const Text('Vehicle Plate'),
-                            subtitle: Text(plateNumber),
+                          ],
+                          Divider(height: 1),
+                          ListTile(
+                            leading: Icon(Icons.category, color: accentTeal),
+                            title: const Text('Brick Type'),
+                            subtitle: Text(brickType),
                           ),
                         ],
-                        Divider(height: 1),
-                        ListTile(
-                          leading: Icon(
-                            Icons.category,
-                            color: Colors.pinkAccent,
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+
+                    // Attendance
+                    Text(
+                      'Today\'s Attendance',
+                      style: TextStyle(
+                        color: accentTeal,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Card(
+                      elevation: 1,
+                      color: cardWhite,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        child: todayAttendance.isEmpty
+                            ? ListTile(
+                                leading: Icon(
+                                  Icons.info_outline,
+                                  color: Colors.redAccent,
+                                ),
+                                title: const Text('No Attendance'),
+                              )
+                            : ListTile(
+                                leading: Icon(
+                                  Icons.check_circle,
+                                  color: Colors.green,
+                                ),
+                                title: Text(
+                                  '${DateTime.now().day.toString().padLeft(2, '0')}-'
+                                  '${DateTime.now().month.toString().padLeft(2, '0')}-'
+                                  '${DateTime.now().year}',
+                                ),
+                                subtitle: Text('Attendance marked for today'),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+
+                    // Payment Summary
+                    Text(
+                      'Payment Summary',
+                      style: TextStyle(
+                        color: accentTeal,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Card(
+                      elevation: 1,
+                      color: cardWhite,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        children: [
+                          ListTile(
+                            leading: Icon(Icons.price_change, color: Colors.green),
+                            title: const Text('Per Lift Price'),
+                            subtitle: Text('Rs ${labour.perLiftPrice}'),
                           ),
-                          title: const Text('Brick Type'),
-                          subtitle: Text(brickType),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 22),
-                  Text(
-                    'Today\'s Attendance',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: orangeAccent,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 9),
-                  Card(
-                    elevation: 1,
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(13),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      child: todayAttendance.isEmpty
-                          ? ListTile(
-                              leading: Icon(
-                                Icons.info_outline,
-                                color: Colors.redAccent,
-                              ),
-                              title: const Text('No Attendance'),
-                            )
-                          : ListTile(
-                              leading: Icon(
-                                Icons.check_circle,
-                                color: Colors.green,
-                              ),
-                              title: Text(
-                                '${DateTime.now().day.toString().padLeft(2, '0')}-'
-                                '${DateTime.now().month.toString().padLeft(2, '0')}-'
-                                '${DateTime.now().year}',
-                              ),
-                              subtitle: Text('Attendance marked for today'),
+                          Divider(height: 1),
+                          ListTile(
+                            leading: Icon(Icons.today, color: lightBlue),
+                            title: const Text("Today's Earnings"),
+                            subtitle: Text(
+                              'Rs $todayEarnings  (Lifts: $todayLifts)',
                             ),
-                    ),
-                  ),
-                  const SizedBox(height: 22),
-                  Text(
-                    'Payment Summary',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: orangeAccent,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 9),
-                  Card(
-                    elevation: 1,
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(13),
-                    ),
-                    child: Column(
-                      children: [
-                        ListTile(
-                          leading: Icon(
-                            Icons.price_change,
-                            color: Colors.green,
                           ),
-                          title: const Text('Per Lift Price'),
-                          subtitle: Text('Rs ${labour.perLiftPrice}'),
-                        ),
-                        Divider(height: 1),
-                        ListTile(
-                          leading: Icon(Icons.today, color: lightOrange),
-                          title: const Text("Today's Earnings"),
-                          subtitle: Text(
-                            'Rs $todayEarnings  (Lifts: $todayLifts)',
+                          Divider(height: 1),
+                          ListTile(
+                            leading: Icon(Icons.calendar_today, color: accentTeal),
+                            title: const Text('Monthly Earnings'),
+                            subtitle: Text('Rs $monthlyEarnings'),
                           ),
-                        ),
-                        Divider(height: 1),
-                        ListTile(
-                          leading: Icon(
-                            Icons.calendar_today,
-                            color: Colors.blueAccent,
+                          Divider(height: 1),
+                          ListTile(
+                            leading: Icon(Icons.summarize, color: primaryBlue),
+                            title: const Text('Total Earnings'),
+                            subtitle: Text('Rs $totalEarnings'),
                           ),
-                          title: const Text('Monthly Earnings'),
-                          subtitle: Text('Rs $monthlyEarnings'),
-                        ),
-                        Divider(height: 1),
-                        ListTile(
-                          leading: Icon(Icons.summarize, color: Colors.purple),
-                          title: const Text('Total Earnings'),
-                          subtitle: Text('Rs $totalEarnings'),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

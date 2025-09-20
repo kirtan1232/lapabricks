@@ -34,16 +34,21 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final store = context.watch<LabourStore>();
-    const Color cream = Color(0xFFFFF6E5);
-    const Color lightOrange = Color(0xFFFFB74D);
-    const Color orangeAccent = Color(0xFFFF9800);
+    const Color primaryBlue = Color(0xFF2563EB);
+    const Color lightBlue = Color(0xFF3B82F6);
+    const Color accentTeal = Color(0xFF06B6D4);
+    const Color backgroundGray = Color(0xFFF8FAFC);
+    const Color cardWhite = Color(0xFFFFFFFF);
+    const Color darkGray = Color(0xFF1E293B);
+    const Color lightGray = Color(0xFF64748B);
 
     if (!store.loaded) {
       return Scaffold(
-        backgroundColor: cream,
-        body: const Center(
+        backgroundColor: backgroundGray,
+        body: Center(
           child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(orangeAccent),
+            valueColor: AlwaysStoppedAnimation<Color>(primaryBlue),
+            strokeWidth: 3,
           ),
         ),
       );
@@ -55,13 +60,17 @@ class _HomePageState extends State<HomePage> {
     ).toList();
 
     return Scaffold(
-      backgroundColor: cream,
+      backgroundColor: backgroundGray,
       appBar: AppBar(
-        backgroundColor: orangeAccent,
+        backgroundColor: cardWhite,
+        elevation: 0,
+        shadowColor: Colors.black.withOpacity(0.1),
         titleSpacing: 0,
+        centerTitle: true,
         title: _showSearchBar
             ? Container(
-                height: 40,
+                height: 45,
+                margin: const EdgeInsets.symmetric(horizontal: 16),
                 alignment: Alignment.center,
                 child: TextField(
                   controller: _searchController,
@@ -69,160 +78,285 @@ class _HomePageState extends State<HomePage> {
                   onChanged: (val) {
                     setState(() => _searchQuery = val.trim());
                   },
-                  style: const TextStyle(fontSize: 15, color: Colors.black87),
+                  style: const TextStyle(fontSize: 16, color: darkGray),
                   decoration: InputDecoration(
-                    contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                     hintText: "Search labour...",
-                    hintStyle: TextStyle(color: Colors.grey[600]),
+                    hintStyle: TextStyle(color: lightGray, fontSize: 15),
                     filled: true,
-                    fillColor: Colors.white,
-                    prefixIcon: const Icon(Icons.search, color: orangeAccent),
+                    fillColor: backgroundGray,
+                    prefixIcon: Icon(Icons.search_rounded, color: primaryBlue, size: 22),
                     suffixIcon: IconButton(
-                      icon: const Icon(Icons.close, color: Colors.grey),
+                      icon: Icon(Icons.close_rounded, color: lightGray, size: 20),
                       onPressed: _toggleSearchBar,
                     ),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: primaryBlue, width: 2),
                     ),
                   ),
                 ),
               )
-            : const Text('Lapa Bricks'),
-        titleTextStyle: const TextStyle(color: Colors.white),
+            : Container(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'LAPA BRICKS',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        color: primaryBlue,
+                        letterSpacing: 1.2,
+                        shadows: [
+                          Shadow(
+                            offset: Offset(0, 2),
+                            blurRadius: 4,
+                            color: Colors.black.withOpacity(0.1),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      height: 3,
+                      width: 60,
+                      margin: const EdgeInsets.only(top: 4),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [primaryBlue, accentTeal],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        ),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
         actions: [
           if (!_showSearchBar)
-            IconButton(
-              tooltip: 'Search',
-              icon: const Icon(Icons.search, color: Colors.white),
-              onPressed: _toggleSearchBar,
+            Container(
+              margin: const EdgeInsets.only(right: 8),
+              child: IconButton(
+                tooltip: 'Search',
+                icon: Icon(Icons.search_rounded, color: primaryBlue, size: 26),
+                onPressed: _toggleSearchBar,
+                style: IconButton.styleFrom(
+                  backgroundColor: backgroundGray,
+                  padding: const EdgeInsets.all(10),
+                ),
+              ),
             ),
         ],
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          double maxWidth = constraints.maxWidth < 550
-              ? constraints.maxWidth * 0.98
-              : constraints.maxWidth < 1000
-                  ? 540
-                  : 720;
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            double maxWidth = constraints.maxWidth < 550
+                ? constraints.maxWidth * 0.98
+                : constraints.maxWidth < 1000
+                    ? 540
+                    : 720;
 
-          return Center(
-            child: Container(
-              constraints: BoxConstraints(maxWidth: maxWidth),
-              padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
-              child: labours.isEmpty
-                  ? Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image.asset('assets/logo.png', height: 90),
-                        const SizedBox(height: 12),
-                        Text(
-                          _searchQuery.isEmpty
-                            ? 'No labours yet!'
-                            : 'No labours match your search.',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                color: orangeAccent,
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          _searchQuery.isEmpty
-                            ? 'Tap the Add button to start.'
-                            : 'Try changing your search.',
-                          style: TextStyle(
-                            color: Colors.grey[700],
-                            fontSize: 16,
+            return Center(
+              child: Container(
+                constraints: BoxConstraints(maxWidth: maxWidth),
+                // Only a small bottom padding for aesthetics, not for FAB/navbar!
+                padding: const EdgeInsets.only(
+                  top: 20,
+                  left: 16,
+                  right: 16,
+                  bottom: 8,
+                ),
+                child: labours.isEmpty
+                    ? Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: cardWhite,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Image.asset('assets/logo.png', height: 100),
                           ),
-                        ),
-                      ],
-                    )
-                  : ListView.separated(
-                      itemCount: labours.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
-                      itemBuilder: (context, index) {
-                        final labour = labours[index];
-                        return InkWell(
-                          borderRadius: BorderRadius.circular(14),
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => LabourDetailPage(labourId: labour.id),
+                          const SizedBox(height: 24),
+                          Text(
+                            _searchQuery.isEmpty
+                              ? 'No labours yet!'
+                              : 'No labours match your search.',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: darkGray,
                             ),
                           ),
-                          child: Card(
-                            elevation: 2,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                          const SizedBox(height: 12),
+                          Text(
+                            _searchQuery.isEmpty
+                              ? 'Tap the Add button to start.'
+                              : 'Try changing your search.',
+                            style: TextStyle(
+                              color: lightGray,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      )
+                    : ListView.separated(
+                        itemCount: labours.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final labour = labours[index];
+                          return InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => LabourDetailPage(labourId: labour.id),
+                              ),
                             ),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10),
-                              height: 56,
+                              padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(14),
-                                gradient: LinearGradient(
-                                  colors: [cream, lightOrange.withOpacity(0.12)],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
+                                color: cardWhite,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.04),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                                border: Border.all(
+                                  color: Colors.black.withOpacity(0.04),
+                                  width: 1,
                                 ),
                               ),
                               child: Row(
                                 children: [
-                                  CircleAvatar(
-                                    radius: 18,
-                                    backgroundColor: orangeAccent.withOpacity(0.14),
-                                    child: Text(
-                                      labour.name.isEmpty ? '?' : labour.name[0].toUpperCase(),
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        color: orangeAccent,
-                                        fontWeight: FontWeight.bold,
+                                  Container(
+                                    width: 48,
+                                    height: 48,
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [primaryBlue, lightBlue],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: primaryBlue.withOpacity(0.3),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        labour.name.isEmpty ? '?' : labour.name[0].toUpperCase(),
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 13),
+                                  const SizedBox(width: 16),
                                   Expanded(
-                                    child: Text(
-                                      labour.name,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 16,
-                                        color: Colors.grey[900],
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          labour.name,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 17,
+                                            color: darkGray,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.calendar_today_rounded,
+                                              size: 14,
+                                              color: lightGray,
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              'Attendance: ${labour.attendance.length}',
+                                              style: TextStyle(
+                                                color: lightGray,
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    'Attendance: ${labour.attendance.length}',
-                                    style: const TextStyle(
-                                      color: Colors.black54,
-                                      fontSize: 13,
+                                  const SizedBox(width: 12),
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: backgroundGray,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      Icons.arrow_forward_ios_rounded,
+                                      color: primaryBlue,
+                                      size: 16,
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
-                                  const Icon(Icons.chevron_right, color: orangeAccent, size: 24),
                                 ],
                               ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-            ),
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const AddLabourPage()),
+                          );
+                        },
+                      ),
+              ),
+            );
+          },
         ),
-        icon: const Icon(Icons.add),
-        label: const Text('Add'),
-        backgroundColor: orangeAccent,
-        foregroundColor: Colors.white,
-        elevation: 3,
       ),
+      floatingActionButton: !_showSearchBar
+          ? FloatingActionButton.extended(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const AddLabourPage()),
+              ),
+              icon: const Icon(Icons.add_rounded, size: 24),
+              label: const Text(
+                'Add Labour',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
+              backgroundColor: primaryBlue,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }

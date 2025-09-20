@@ -26,6 +26,12 @@ class _AddLabourPageState extends State<AddLabourPage> {
   final List<String> occupations = ['Labour', 'Driver'];
   final List<String> brickTypes = ['Kacho Brick', 'Pako Brick'];
 
+  // Colors
+  static const Color primaryBlue = Color(0xFF2563EB);
+  static const Color accentTeal = Color(0xFF06B6D4);
+  static const Color backgroundGray = Color(0xFFF8FAFC);
+  static const Color cardWhite = Color(0xFFFFFFFF);
+
   @override
   void dispose() {
     _nameCtrl.dispose();
@@ -141,39 +147,74 @@ class _AddLabourPageState extends State<AddLabourPage> {
 
   @override
   Widget build(BuildContext context) {
-    const Color cream = Color(0xFFFFF6E5);
-    const Color orangeAccent = Color(0xFFFF9800);
-    const Color lightOrange = Color(0xFFFFB74D);
-
     return Scaffold(
-      backgroundColor: cream,
+      backgroundColor: backgroundGray,
       appBar: AppBar(
-        backgroundColor: orangeAccent,
-        title: const Text('Add Labour'),
-        titleTextStyle: const TextStyle(color: Colors.white),
-        elevation: 1,
+        backgroundColor: cardWhite,
+        elevation: 0,
+        shadowColor: Colors.black.withOpacity(0.1),
+        titleSpacing: 0,
+        centerTitle: true,
+        title: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Lapa Bricks',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  color: primaryBlue,
+                  letterSpacing: 1.2,
+                  shadows: [
+                    Shadow(
+                      offset: Offset(0, 2),
+                      blurRadius: 4,
+                      color: Colors.black.withOpacity(0.1),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                height: 3,
+                width: 60,
+                margin: const EdgeInsets.only(top: 4),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [primaryBlue, accentTeal],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           double maxWidth = constraints.maxWidth < 600
               ? constraints.maxWidth * 0.98
-              : constraints.maxWidth < 900
-                  ? 500
-                  : 650;
+              : constraints.maxWidth < 1000
+                  ? 540
+                  : 700;
           return Center(
             child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(vertical: 24),
               child: Container(
                 constraints: BoxConstraints(maxWidth: maxWidth),
-                margin: const EdgeInsets.symmetric(vertical: 24, horizontal: 8),
-                padding: const EdgeInsets.all(24),
+                margin: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.all(22),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(28),
+                  color: cardWhite,
+                  borderRadius: BorderRadius.circular(22),
                   boxShadow: [
                     BoxShadow(
-                      color: orangeAccent.withOpacity(0.11),
-                      blurRadius: 24,
-                      offset: const Offset(0, 10),
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
                     ),
                   ],
                 ),
@@ -181,33 +222,48 @@ class _AddLabourPageState extends State<AddLabourPage> {
                   key: _formKey,
                   child: Column(
                     children: [
-                      
-                      TextFormField(
-                        controller: _nameCtrl,
-                        decoration: InputDecoration(
-                          labelText: 'Name',
-                          prefixIcon: const Icon(Icons.person, color: orangeAccent),
-                          filled: true,
-                          fillColor: cream,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: orangeAccent),
-                          ),
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 15),
+                        child: Column(
+                          children: [
+                            Text(
+                              'New Labour Details',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20,
+                                color: primaryBlue, // Now blue
+                              ),
+                            ),
+                            Container(
+                              height: 3,
+                              width: 52,
+                              margin: const EdgeInsets.only(top: 5),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [primaryBlue, accentTeal],
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                ),
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                          ],
                         ),
-                        validator: (v) =>
-                            (v == null || v.trim().isEmpty) ? 'Enter name' : null,
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 7),
+                      _buildInput(
+                        controller: _nameCtrl,
+                        label: 'Name',
+                        icon: Icons.person_rounded,
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? 'Enter name'
+                            : null,
+                      ),
+                      const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
-                        decoration: InputDecoration(
-                          labelText: 'Occupation',
-                          prefixIcon: const Icon(Icons.work, color: orangeAccent),
-                          filled: true,
-                          fillColor: cream,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: orangeAccent),
-                          ),
+                        decoration: _inputDecoration(
+                          label: 'Occupation',
+                          icon: Icons.work_rounded,
                         ),
                         value: _occupation,
                         items: occupations
@@ -216,12 +272,13 @@ class _AddLabourPageState extends State<AddLabourPage> {
                                   child: Row(
                                     children: [
                                       Icon(
-                                        occ == 'Driver' ? Icons.local_shipping : Icons.build,
-                                        color: orangeAccent,
-                                        size: 19,
+                                        occ == 'Driver'
+                                            ? Icons.local_shipping
+                                            : Icons.build,
+                                        size: 20,
                                       ),
                                       const SizedBox(width: 8),
-                                      Text(occ),
+                                      Text(occ, style: TextStyle(color: Colors.black)),
                                     ],
                                   ),
                                 ))
@@ -239,95 +296,81 @@ class _AddLabourPageState extends State<AddLabourPage> {
                           }
                         },
                         validator: (value) =>
-                            (value == null || value.isEmpty) ? 'Select occupation' : null,
+                            (value == null || value.isEmpty)
+                                ? 'Select occupation'
+                                : null,
                       ),
                       if (_occupation == 'Driver' && _vehicleNumber != null)
                         Container(
                           margin: const EdgeInsets.only(top: 7, bottom: 6),
-                          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 13, vertical: 7),
                           decoration: BoxDecoration(
-                            color: lightOrange.withOpacity(0.16),
+                            color: accentTeal.withOpacity(0.07),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.directions_car, color: orangeAccent),
+                              const Icon(Icons.directions_car),
                               const SizedBox(width: 8),
                               Text(
                                 'Vehicle Plate: $_vehicleNumber',
-                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, color: Colors.black),
                               ),
                             ],
                           ),
                         ),
-                      const SizedBox(height: 14),
-                      TextFormField(
+                      const SizedBox(height: 12),
+                      _buildInput(
                         controller: _addressCtrl,
-                        decoration: InputDecoration(
-                          labelText: 'Address',
-                          prefixIcon: const Icon(Icons.location_on, color: orangeAccent),
-                          filled: true,
-                          fillColor: cream,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: orangeAccent),
-                          ),
-                        ),
-                        validator: (v) =>
-                            (v == null || v.trim().isEmpty) ? 'Enter address' : null,
+                        label: 'Address',
+                        icon: Icons.location_on_rounded,
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? 'Enter address'
+                            : null,
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 12),
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 10),
                             child: Text(
                               _countryCode,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 16,
-                                color: orangeAccent,
+                                color: Colors.black,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: TextFormField(
+                            child: _buildInput(
                               controller: _phoneCtrl,
-                              keyboardType: TextInputType.phone,
-                              decoration: InputDecoration(
-                                labelText: 'Phone Number',
-                                prefixIcon: const Icon(Icons.phone, color: orangeAccent),
-                                filled: true,
-                                fillColor: cream,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: orangeAccent),
-                                ),
-                              ),
+                              label: 'Phone Number',
+                              icon: Icons.phone_rounded,
                               validator: (v) {
                                 final phoneNum = v?.trim() ?? '';
-                                if (phoneNum.isEmpty) return 'Enter phone number';
-                                if (!RegExp(r'^[0-9]{10}$').hasMatch(phoneNum)) {
+                                if (phoneNum.isEmpty)
+                                  return 'Enter phone number';
+                                if (!RegExp(r'^[0-9]{10}$')
+                                    .hasMatch(phoneNum)) {
                                   return 'Phone number must be exactly 10 digits';
                                 }
                                 return null;
                               },
+                              type: TextInputType.phone,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
-                        decoration: InputDecoration(
-                          labelText: 'Brick Type',
-                          prefixIcon: const Icon(Icons.account_tree, color: orangeAccent),
-                          filled: true,
-                          fillColor: cream,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: orangeAccent),
-                          ),
+                        decoration: _inputDecoration(
+                          label: 'Brick Type',
+                          icon: Icons.account_tree_rounded,
                         ),
                         value: _brickType,
                         items: brickTypes
@@ -340,10 +383,10 @@ class _AddLabourPageState extends State<AddLabourPage> {
                                         color: type == 'Kacho Brick'
                                             ? Colors.brown
                                             : Colors.redAccent,
-                                        size: 15,
+                                        size: 16,
                                       ),
                                       const SizedBox(width: 8),
-                                      Text(type),
+                                      Text(type, style: TextStyle(color: Colors.black)),
                                     ],
                                   ),
                                 ))
@@ -354,65 +397,56 @@ class _AddLabourPageState extends State<AddLabourPage> {
                           });
                         },
                         validator: (value) =>
-                            (value == null || value.isEmpty) ? 'Select brick type' : null,
+                            (value == null || value.isEmpty)
+                                ? 'Select brick type'
+                                : null,
                       ),
-                      const SizedBox(height: 14),
-                      TextFormField(
+                      const SizedBox(height: 12),
+                      _buildInput(
                         controller: _liftCtrl,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: 'Lift',
-                          prefixIcon: const Icon(Icons.line_weight, color: orangeAccent),
-                          filled: true,
-                          fillColor: cream,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: orangeAccent),
-                          ),
-                        ),
+                        label: 'Lift',
+                        icon: Icons.line_weight_rounded,
                         validator: (v) {
-                          if (v == null || v.trim().isEmpty) return 'Enter lift';
-                          if (!RegExp(r'^[0-9]+$').hasMatch(v)) return 'Only numbers allowed';
+                          if (v == null || v.trim().isEmpty)
+                            return 'Enter lift';
+                          if (!RegExp(r'^[0-9]+$').hasMatch(v))
+                            return 'Only numbers allowed';
                           return null;
                         },
+                        type: TextInputType.number,
                       ),
-                      const SizedBox(height: 14),
-                      TextFormField(
+                      const SizedBox(height: 12),
+                      _buildInput(
                         controller: _perLiftPriceCtrl,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: 'Per Lift Price',
-                          prefixIcon: const Icon(Icons.attach_money, color: orangeAccent),
-                          filled: true,
-                          fillColor: cream,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: orangeAccent),
-                          ),
-                        ),
+                        label: 'Per Lift Price',
+                        icon: Icons.attach_money_rounded,
                         validator: (v) {
-                          if (v == null || v.trim().isEmpty) return 'Enter price';
-                          if (!RegExp(r'^[0-9]+$').hasMatch(v)) return 'Only numbers allowed';
+                          if (v == null || v.trim().isEmpty)
+                            return 'Enter price';
+                          if (!RegExp(r'^[0-9]+$').hasMatch(v))
+                            return 'Only numbers allowed';
                           return null;
                         },
+                        type: TextInputType.number,
                       ),
-                      const SizedBox(height: 25),
+                      const SizedBox(height: 22),
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: orangeAccent,
+                            backgroundColor: primaryBlue,
                             foregroundColor: Colors.white,
                             elevation: 2,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            padding: const EdgeInsets.symmetric(vertical: 13),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          icon: const Icon(Icons.save),
+                          icon: const Icon(Icons.save_rounded),
                           label: const Text(
                             'Save Labour',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                            style:
+                                TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                           ),
                           onPressed: _save,
                         ),
@@ -425,6 +459,48 @@ class _AddLabourPageState extends State<AddLabourPage> {
           );
         },
       ),
+    );
+  }
+
+  InputDecoration _inputDecoration({
+    required String label,
+    required IconData icon,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon),
+      labelStyle: const TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
+      filled: true,
+      fillColor: backgroundGray,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: Colors.black, width: 1.5),
+      ),
+      contentPadding: const EdgeInsets.symmetric(vertical: 11, horizontal: 15),
+    );
+  }
+
+  Widget _buildInput({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    required String? Function(String?) validator,
+    TextInputType type = TextInputType.text,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: type,
+      style: const TextStyle(
+        fontSize: 15,
+        color: Colors.black,
+        fontWeight: FontWeight.w500,
+      ),
+      decoration: _inputDecoration(label: label, icon: icon),
+      validator: validator,
     );
   }
 }

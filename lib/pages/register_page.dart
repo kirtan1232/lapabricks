@@ -51,8 +51,10 @@ class _RegisterPageState extends State<RegisterPage> {
 
       Future.delayed(const Duration(seconds: 1), () {
         if (mounted) {
-          Navigator.of(context).pushReplacement(
+          // Navigation fix: Remove previous pages
+          Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => const LapaLoginPage()),
+            (route) => false,
           );
         }
       });
@@ -74,217 +76,514 @@ class _RegisterPageState extends State<RegisterPage> {
   void showMessage(String msg, bool success) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(msg),
-        backgroundColor: success ? Colors.green : Colors.red,
-        duration: const Duration(seconds: 2),
+        content: Text(
+          msg,
+          style: const TextStyle(
+            fontWeight: FontWeight.w500,
+            fontSize: 15,
+          ),
+        ),
+        backgroundColor: success 
+            ? const Color(0xFF059669) // Modern green
+            : const Color(0xFFDC2626), // Modern red
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 3),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    const Color cream = Color(0xFFFFF6E5);
-    const Color lightOrange = Color(0xFFFFB74D);
-    const Color orangeAccent = Color(0xFFFF9800);
+    // Modern color scheme matching login page
+    const Color primaryBlue = Color(0xFF2563EB);
+    const Color lightBlue = Color(0xFF3B82F6);
+    const Color accentTeal = Color(0xFF06B6D4);
+    const Color backgroundGray = Color(0xFFF8FAFC);
+    const Color cardWhite = Color(0xFFFFFFFF);
+    const Color darkGray = Color(0xFF1E293B);
+    const Color lightGray = Color(0xFF64748B);
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth >= 768;
 
     return Scaffold(
-      backgroundColor: cream,
+      backgroundColor: backgroundGray,
       body: LayoutBuilder(
         builder: (context, constraints) {
           double maxWidth = constraints.maxWidth < 500
-              ? constraints.maxWidth * 0.98
+              ? constraints.maxWidth * 0.95
               : constraints.maxWidth < 800
-                  ? 430
-                  : 600;
+                  ? 450
+                  : 650;
 
           return Center(
             child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(
+                horizontal: isTablet ? 32 : 16,
+                vertical: isTablet ? 48 : 24,
+              ),
               child: Container(
                 constraints: BoxConstraints(maxWidth: maxWidth),
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
-                padding: const EdgeInsets.all(24),
+                padding: EdgeInsets.all(isTablet ? 40 : 28),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(28),
+                  color: cardWhite,
+                  borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: lightOrange.withOpacity(0.13),
-                      blurRadius: 20,
-                      offset: const Offset(0, 7),
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Logo
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 18),
+                    // Logo with enhanced styling
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      margin: const EdgeInsets.only(bottom: 24),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            primaryBlue.withOpacity(0.1),
+                            accentTeal.withOpacity(0.1),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                       child: SizedBox(
-                        height: 90,
+                        height: isTablet ? 100 : 80,
                         child: Image.asset(
                           'assets/logo.png',
                           fit: BoxFit.contain,
                         ),
                       ),
                     ),
+                    // Title with modern styling
+                    Column(
+                      children: [
+                        Text(
+                          'LAPA BRICKS',
+                          style: TextStyle(
+                            fontSize: isTablet ? 32 : 28,
+                            fontWeight: FontWeight.w900,
+                            color: primaryBlue,
+                            letterSpacing: 1.2,
+                            shadows: [
+                              Shadow(
+                                offset: const Offset(0, 2),
+                                blurRadius: 4,
+                                color: Colors.black.withOpacity(0.1),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          height: 3,
+                          width: 80,
+                          margin: const EdgeInsets.only(top: 8, bottom: 16),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [primaryBlue, accentTeal],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ],
+                    ),
                     Text(
                       'Create Your Account',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            color: orangeAccent,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      style: TextStyle(
+                        fontSize: isTablet ? 20 : 18,
+                        fontWeight: FontWeight.w600,
+                        color: darkGray,
+                      ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 6),
                     Text(
                       'Fill your details to register',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[700],
-                          ),
+                      style: TextStyle(
+                        fontSize: isTablet ? 16 : 15,
+                        color: lightGray,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                    const SizedBox(height: 24),
+                    SizedBox(height: isTablet ? 32 : 28),
                     // Name Input
-                    TextField(
-                      controller: nameController,
-                      style: const TextStyle(fontSize: 16),
-                      decoration: InputDecoration(
-                        prefixIcon: const Icon(Icons.person, color: orangeAccent),
-                        labelText: 'Name',
-                        filled: true,
-                        fillColor: cream,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: orangeAccent, width: 1),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.02),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        controller: nameController,
+                        style: TextStyle(
+                          fontSize: isTablet ? 17 : 16,
+                          color: darkGray,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        decoration: InputDecoration(
+                          prefixIcon: Container(
+                            margin: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [primaryBlue, lightBlue],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.person_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          labelText: 'Name',
+                          labelStyle: TextStyle(
+                            color: lightGray,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          filled: true,
+                          fillColor: backgroundGray,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: primaryBlue, width: 2),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                            horizontal: 16,
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 16),
                     // Email Input
-                    TextField(
-                      controller: emailController,
-                      style: const TextStyle(fontSize: 16),
-                      decoration: InputDecoration(
-                        prefixIcon: const Icon(Icons.email, color: orangeAccent),
-                        labelText: 'Email',
-                        filled: true,
-                        fillColor: cream,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: orangeAccent, width: 1),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.02),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        controller: emailController,
+                        style: TextStyle(
+                          fontSize: isTablet ? 17 : 16,
+                          color: darkGray,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        decoration: InputDecoration(
+                          prefixIcon: Container(
+                            margin: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [primaryBlue, lightBlue],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.email_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          labelText: 'Email',
+                          labelStyle: TextStyle(
+                            color: lightGray,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          filled: true,
+                          fillColor: backgroundGray,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: primaryBlue, width: 2),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                            horizontal: 16,
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 16),
                     // Phone Input
-                    TextField(
-                      controller: phoneController,
-                      keyboardType: TextInputType.phone,
-                      style: const TextStyle(fontSize: 16),
-                      decoration: InputDecoration(
-                        prefixIcon: const Icon(Icons.phone, color: orangeAccent),
-                        labelText: 'Phone Number',
-                        filled: true,
-                        fillColor: cream,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: orangeAccent, width: 1),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.02),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        controller: phoneController,
+                        keyboardType: TextInputType.phone,
+                        style: TextStyle(
+                          fontSize: isTablet ? 17 : 16,
+                          color: darkGray,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        decoration: InputDecoration(
+                          prefixIcon: Container(
+                            margin: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [primaryBlue, lightBlue],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.phone_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          labelText: 'Phone Number',
+                          labelStyle: TextStyle(
+                            color: lightGray,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          filled: true,
+                          fillColor: backgroundGray,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: primaryBlue, width: 2),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                            horizontal: 16,
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 16),
                     // Password Input
-                    TextField(
-                      controller: passwordController,
-                      style: const TextStyle(fontSize: 16),
-                      decoration: InputDecoration(
-                        prefixIcon: const Icon(Icons.lock, color: orangeAccent),
-                        labelText: 'Password',
-                        filled: true,
-                        fillColor: cream,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: orangeAccent, width: 1),
-                        ),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            passwordVisible ? Icons.visibility : Icons.visibility_off,
-                            color: orangeAccent,
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.02),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
                           ),
-                          onPressed: () {
-                            setState(() => passwordVisible = !passwordVisible);
-                          },
-                        ),
+                        ],
                       ),
-                      obscureText: !passwordVisible,
+                      child: TextField(
+                        controller: passwordController,
+                        style: TextStyle(
+                          fontSize: isTablet ? 17 : 16,
+                          color: darkGray,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        decoration: InputDecoration(
+                          prefixIcon: Container(
+                            margin: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [primaryBlue, lightBlue],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.lock_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          labelText: 'Password',
+                          labelStyle: TextStyle(
+                            color: lightGray,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          filled: true,
+                          fillColor: backgroundGray,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: primaryBlue, width: 2),
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              passwordVisible 
+                                  ? Icons.visibility_rounded 
+                                  : Icons.visibility_off_rounded,
+                              color: lightGray,
+                            ),
+                            onPressed: () {
+                              setState(() => passwordVisible = !passwordVisible);
+                            },
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                            horizontal: 16,
+                          ),
+                        ),
+                        obscureText: !passwordVisible,
+                      ),
                     ),
-                    const SizedBox(height: 22),
+                    SizedBox(height: isTablet ? 32 : 28),
+                    // Register button with modern design
                     SizedBox(
                       width: double.infinity,
-                      height: 44,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: lightOrange,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        height: isTablet ? 54 : 50,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [primaryBlue, lightBlue],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
                           ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: primaryBlue.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
                         ),
-                        onPressed: register,
-                        child: const Text(
-                          'Register',
-                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: register,
+                          child: Text(
+                            'Register',
+                            style: TextStyle(
+                              fontSize: isTablet ? 18 : 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 18),
-                    // Divider with text
+                    const SizedBox(height: 24),
+                    // Modern divider
                     Row(
                       children: [
                         Expanded(
-                          child: Divider(
-                            color: Colors.orange[200],
-                            thickness: 1.2,
-                            endIndent: 10,
+                          child: Container(
+                            height: 1,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.transparent,
+                                  lightGray.withOpacity(0.3),
+                                ],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                            ),
                           ),
                         ),
-                        Text(
-                          'or',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.w500,
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'or',
+                            style: TextStyle(
+                              color: lightGray,
+                              fontWeight: FontWeight.w600,
+                              fontSize: isTablet ? 16 : 14,
+                            ),
                           ),
                         ),
                         Expanded(
-                          child: Divider(
-                            color: Colors.orange[200],
-                            thickness: 1.2,
-                            indent: 10,
+                          child: Container(
+                            height: 1,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  lightGray.withOpacity(0.3),
+                                  Colors.transparent,
+                                ],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                            ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 14),
+                    SizedBox(height: isTablet ? 20 : 15),
                     // Link to Login
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Flexible(
                           child: TextButton.icon(
-                            icon: const Icon(Icons.login, color: orangeAccent),
+                            icon: Icon(Icons.login_rounded, color: primaryBlue),
                             label: const Text('Already have an account? Login'),
                             style: TextButton.styleFrom(
-                              foregroundColor: orangeAccent,
+                              foregroundColor: primaryBlue,
                             ),
-                            onPressed: () => Navigator.pushReplacement(
-                              context,
+                            onPressed: () => Navigator.of(context).pushAndRemoveUntil(
                               MaterialPageRoute(builder: (_) => const LapaLoginPage()),
+                              (route) => false,
                             ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
                   ],
                 ),
               ),
