@@ -530,35 +530,29 @@ class _LapaLoginPageState extends State<LapaLoginPage> {
                     ),
                     SizedBox(height: isTablet ? 24 : 20),
 
-                    // Side-by-side action buttons - FIXED
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildActionButton(
-                            icon: Icons.person_add_rounded,
-                            label: 'Create Account',
-                            onPressed: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const RegisterPage()),
-                            ),
-                            primaryColor: primaryBlue,
-                            isTablet: isTablet,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildActionButton(
-                            icon: Icons.lock_reset_rounded,
-                            label: 'Forgot Password?',
-                            onPressed: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
-                            ),
-                            primaryColor: accentTeal,
-                            isTablet: isTablet,
-                          ),
-                        ),
-                      ],
+                    // Create Account button
+                    _buildActionButton(
+                      icon: Icons.person_add_rounded,
+                      label: 'Create Account',
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const RegisterPage()),
+                      ),
+                      primaryColor: primaryBlue,
+                      isTablet: isTablet,
+                    ),
+                    SizedBox(height: 12),
+
+                    // Forgot Password button just below Create Account
+                    _buildActionButton(
+                      icon: Icons.lock_reset_rounded,
+                      label: 'Forgot Password?',
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
+                      ),
+                      primaryColor: accentTeal,
+                      isTablet: isTablet,
                     ),
                   ],
                 ),

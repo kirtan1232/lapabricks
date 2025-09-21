@@ -4,6 +4,7 @@ import 'package:lapabricks/pages/labour_detail_page.dart';
 import 'package:lapabricks/providers/labour_store.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AttendanceScanPage extends StatefulWidget {
   const AttendanceScanPage({super.key});
@@ -15,6 +16,13 @@ class AttendanceScanPage extends StatefulWidget {
 class _AttendanceScanPageState extends State<AttendanceScanPage> {
   late final MobileScannerController _controller;
   bool _handling = false;
+
+  // Modern color scheme matching other pages
+  static const Color primaryBlue = Color(0xFF2563EB);
+  static const Color lightBlue = Color(0xFF3B82F6);
+  static const Color accentTeal = Color(0xFF06B6D4);
+  static const Color backgroundGray = Color(0xFFF8FAFC);
+  static const Color cardWhite = Color(0xFFFFFFFF);
 
   @override
   void initState() {
@@ -31,6 +39,20 @@ class _AttendanceScanPageState extends State<AttendanceScanPage> {
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<DateTime?> getLastScanFromFirestore(String labourId) async {
+    final doc = await FirebaseFirestore.instance.collection('labours').doc(labourId).get();
+    if (doc.exists && doc.data()?['lastScanAt'] != null) {
+      return (doc.data()!['lastScanAt'] as Timestamp).toDate();
+    }
+    return null;
+  }
+
+  Future<void> setLastScanToFirestore(String labourId, DateTime now) async {
+    await FirebaseFirestore.instance.collection('labours').doc(labourId).update({
+      'lastScanAt': Timestamp.fromDate(now),
+    });
   }
 
   Future<void> _showCountdownDialog(Duration duration) async {
@@ -66,7 +88,7 @@ class _AttendanceScanPageState extends State<AttendanceScanPage> {
                   const SizedBox(height: 18),
                   Text(
                     formatDuration(secondsLeft),
-                    style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.orange),
+                    style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: primaryBlue),
                   ),
                 ],
               ),
@@ -119,7 +141,9 @@ class _AttendanceScanPageState extends State<AttendanceScanPage> {
       Duration timeout = occupation == 'Driver' ? const Duration(minutes: 30) : const Duration(minutes: 5);
 
       final now = DateTime.now();
-      final lastScan = store.scanCooldowns[id];
+
+      // --- Firestore global cooldown logic ---
+      final lastScan = await getLastScanFromFirestore(id);
       if (lastScan != null) {
         final elapsed = now.difference(lastScan);
         if (elapsed < timeout) {
@@ -132,7 +156,8 @@ class _AttendanceScanPageState extends State<AttendanceScanPage> {
       store.markAttendanceById(id);
       store.addLift(id);
 
-      await store.updateScanCooldown(id, now);
+      // Update scan timestamp in Firestore (global)
+      await setLastScanToFirestore(id, now);
 
       await _controller.stop();
       if (!mounted) return;
@@ -175,7 +200,46 @@ class _AttendanceScanPageState extends State<AttendanceScanPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan Attendance')),
+      backgroundColor: backgroundGray,
+      appBar: AppBar(
+        backgroundColor: cardWhite,
+        elevation: 1,
+        centerTitle: true,
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'SCAN ATTENDANCE',
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 21,
+                color: primaryBlue,
+                letterSpacing: 1.2,
+                shadows: [
+                  Shadow(
+                    offset: const Offset(0, 2),
+                    blurRadius: 4,
+                    color: Colors.black.withOpacity(0.1),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              height: 3,
+              width: 54,
+              margin: const EdgeInsets.only(top: 4),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [primaryBlue, accentTeal],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ],
+        ),
+      ),
       body: MobileScanner(
         controller: _controller,
         onDetect: (capture) {
