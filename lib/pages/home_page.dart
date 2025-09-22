@@ -58,7 +58,6 @@ class _HomePageState extends State<HomePage> {
       labourTotalEarnings: 0,
       driverTotalLifts: 0,
       driverTotalEarnings: 0,
-      staffTotalLifts: 0,
       staffTotalEarnings: 0,
       overallTotalLifts: 0,
       overallTotalEarnings: 0,

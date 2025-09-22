@@ -119,7 +119,7 @@ class LabourStore extends ChangeNotifier {
         final newDailyRecords = Map<String, Map<String, int>>.from(labour.dailyRecords);
         newDailyRecords[todayStr] = {
           'earnings': labour.dailyIncome ?? 0,
-          'lifts': 0,
+          'lifts': 0, // Staff lifts are always zero, but not counted in daily totals.
         };
         final updatedLabour = labour.copyWith(
           attendance: updatedAttendance,
@@ -229,7 +229,7 @@ class LabourStore extends ChangeNotifier {
 
     int labour_lifts = 0, labour_earnings = 0;
     int driver_lifts = 0, driver_earnings = 0;
-    int staff_lifts = 0, staff_earnings = 0;
+    int staff_earnings = 0;
 
     for (final l in labours) {
       final record = l.dailyRecords[todayStr];
@@ -241,13 +241,13 @@ class LabourStore extends ChangeNotifier {
           driver_lifts += record['lifts'] ?? 0;
           driver_earnings += record['earnings'] ?? 0;
         } else if (l.occupation == 'Staff') {
-          staff_lifts += record['lifts'] ?? 0;
           staff_earnings += record['earnings'] ?? 0;
+          // ignore lifts for staff
         }
       }
     }
 
-    final overall_lifts = labour_lifts + driver_lifts + staff_lifts;
+    final overall_lifts = labour_lifts + driver_lifts; // staff don't lift
     final overall_earnings = labour_earnings + driver_earnings + staff_earnings;
 
     final dailyTotal = DailyTotal(
@@ -256,7 +256,6 @@ class LabourStore extends ChangeNotifier {
       labourTotalEarnings: labour_earnings,
       driverTotalLifts: driver_lifts,
       driverTotalEarnings: driver_earnings,
-      staffTotalLifts: staff_lifts,
       staffTotalEarnings: staff_earnings,
       overallTotalLifts: overall_lifts,
       overallTotalEarnings: overall_earnings,

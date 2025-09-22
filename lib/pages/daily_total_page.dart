@@ -124,51 +124,62 @@ class DailyTotalPage extends StatelessWidget {
                     showModalBottomSheet(
                       context: context,
                       backgroundColor: cardWhite,
+                      isScrollControlled: true, // <-- Important: allows full height and scrolling!
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-                      builder: (_) => Padding(
-                        padding: const EdgeInsets.all(22),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
+                      builder: (_) => SafeArea(
+                        child: SingleChildScrollView(
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                              left: 22,
+                              right: 22,
+                              top: 22,
+                              // For bottom, add viewInsets to handle keyboard if needed and safe area
+                              bottom: MediaQuery.of(context).viewInsets.bottom + 22,
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                CircleAvatar(
-                                  backgroundColor: accentTeal.withOpacity(0.13),
-                                  child: const Icon(Icons.calendar_today, color: accentTeal),
+                                Row(
+                                  children: [
+                                    CircleAvatar(
+                                      backgroundColor: accentTeal.withOpacity(0.13),
+                                      child: const Icon(Icons.calendar_today, color: accentTeal),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      dt.date,
+                                      style: TextStyle(
+                                        color: primaryBlue,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 19,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  dt.date,
-                                  style: TextStyle(
-                                    color: primaryBlue,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 19,
+                                const SizedBox(height: 18),
+                                _detailRow('Labour', dt.labourTotalLifts, dt.labourTotalEarnings, darkGray, lightGray),
+                                _detailRow('Driver', dt.driverTotalLifts, dt.driverTotalEarnings, darkGray, lightGray),
+                                _staffDetailRow(dt.staffTotalEarnings, darkGray, lightGray),
+                                const Divider(height: 30),
+                                _detailRow('Overall', dt.overallTotalLifts, dt.overallTotalEarnings, primaryBlue, accentTeal, bold: true),
+                                const SizedBox(height: 12),
+                                Align(
+                                  alignment: Alignment.bottomRight,
+                                  child: TextButton.icon(
+                                    icon: Icon(Icons.close, color: accentTeal),
+                                    label: const Text('Close'),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: accentTeal,
+                                      textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                    onPressed: () => Navigator.of(context).pop(),
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 18),
-                            _detailRow('Labour', dt.labourTotalLifts, dt.labourTotalEarnings, darkGray, lightGray),
-                            _detailRow('Driver', dt.driverTotalLifts, dt.driverTotalEarnings, darkGray, lightGray),
-                            _staffDetailRow(dt.staffTotalEarnings, darkGray, lightGray),
-                            const Divider(height: 30),
-                            _detailRow('Overall', dt.overallTotalLifts, dt.overallTotalEarnings, primaryBlue, accentTeal, bold: true),
-                            const SizedBox(height: 12),
-                            Align(
-                              alignment: Alignment.bottomRight,
-                              child: TextButton.icon(
-                                icon: Icon(Icons.close, color: accentTeal),
-                                label: const Text('Close'),
-                                style: TextButton.styleFrom(
-                                  foregroundColor: accentTeal,
-                                  textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                onPressed: () => Navigator.of(context).pop(),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     );
@@ -217,11 +228,12 @@ class DailyTotalPage extends StatelessWidget {
     );
   }
 
-  // For Labour/Driver (details bottom sheet)
+  // For Labour/Driver/Overall (details bottom sheet): Lifts and Earnings on separate rows
   Widget _detailRow(String label, int lifts, int earnings, Color color1, Color color2, {bool bold = false}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             '$label:',
@@ -231,7 +243,7 @@ class DailyTotalPage extends StatelessWidget {
               fontSize: bold ? 16 : 15,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(height: 4),
           Text(
             'Lifts: $lifts',
             style: TextStyle(
@@ -240,7 +252,7 @@ class DailyTotalPage extends StatelessWidget {
               fontSize: bold ? 15 : 13,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(height: 2),
           Text(
             'Earnings: Rs $earnings',
             style: TextStyle(
@@ -257,8 +269,9 @@ class DailyTotalPage extends StatelessWidget {
   // For Staff (details bottom sheet): no lifts
   Widget _staffDetailRow(int earnings, Color color1, Color color2) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Staff:',
@@ -268,7 +281,7 @@ class DailyTotalPage extends StatelessWidget {
               fontSize: 15,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(height: 4),
           Text(
             'Earnings: Rs $earnings',
             style: TextStyle(

@@ -4,7 +4,6 @@ class DailyTotal {
   final int labourTotalEarnings;
   final int driverTotalLifts;
   final int driverTotalEarnings;
-  final int staffTotalLifts;
   final int staffTotalEarnings;
   final int overallTotalLifts;
   final int overallTotalEarnings;
@@ -15,7 +14,6 @@ class DailyTotal {
     required this.labourTotalEarnings,
     required this.driverTotalLifts,
     required this.driverTotalEarnings,
-    required this.staffTotalLifts,
     required this.staffTotalEarnings,
     required this.overallTotalLifts,
     required this.overallTotalEarnings,
@@ -28,7 +26,6 @@ class DailyTotal {
       labourTotalEarnings: map['labour_total_earnings'] ?? 0,
       driverTotalLifts: map['driver_total_lifts'] ?? 0,
       driverTotalEarnings: map['driver_total_earnings'] ?? 0,
-      staffTotalLifts: map['staff_total_lifts'] ?? 0,
       staffTotalEarnings: map['staff_total_earnings'] ?? 0,
       overallTotalLifts: map['overall_total_lifts'] ?? 0,
       overallTotalEarnings: map['overall_total_earnings'] ?? 0,
@@ -41,7 +38,6 @@ class DailyTotal {
       'labour_total_earnings': labourTotalEarnings,
       'driver_total_lifts': driverTotalLifts,
       'driver_total_earnings': driverTotalEarnings,
-      'staff_total_lifts': staffTotalLifts,
       'staff_total_earnings': staffTotalEarnings,
       'overall_total_lifts': overallTotalLifts,
       'overall_total_earnings': overallTotalEarnings,
