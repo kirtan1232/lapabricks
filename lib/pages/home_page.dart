@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:lapabricks/pages/add_labour_page.dart';
 import 'package:lapabricks/pages/labour_detail_page.dart';
-import 'package:lapabricks/pages/daily_total_page.dart'; // <-- Import your new page
+import 'package:lapabricks/pages/daily_total_page.dart';
+import 'package:lapabricks/pages/pdf_preview_page.dart'; // <-- Import your PDF preview page
 import 'package:lapabricks/providers/labour_store.dart';
 import 'package:provider/provider.dart';
+
+import 'package:lapabricks/models/daily_total.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -30,6 +34,44 @@ class _HomePageState extends State<HomePage> {
         _searchQuery = '';
       }
     });
+  }
+
+  // PDF preview navigation
+  Future<void> _exportTodayPdf(BuildContext context) async {
+    final store = Provider.of<LabourStore>(context, listen: false);
+    final labours = store.labours;
+    final today = DateTime.now();
+    final dateStr = "${today.year.toString().padLeft(4, '0')}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
+
+    DailyTotal? todayTotal;
+    try {
+      final doc = await FirebaseFirestore.instance.collection('daily_total').doc(dateStr).get();
+      if (doc.exists) {
+        todayTotal = DailyTotal.fromMap(doc.id, doc.data() as Map<String, dynamic>);
+      }
+    } catch (e) {
+      todayTotal = null;
+    }
+    todayTotal ??= DailyTotal(
+      date: dateStr,
+      labourTotalLifts: 0,
+      labourTotalEarnings: 0,
+      driverTotalLifts: 0,
+      driverTotalEarnings: 0,
+      staffTotalLifts: 0,
+      staffTotalEarnings: 0,
+      overallTotalLifts: 0,
+      overallTotalEarnings: 0,
+    );
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PdfPreviewPage(
+          date: dateStr,
+          labours: labours,
+          dailyTotal: todayTotal!,
+        ),
+      ),
+    );
   }
 
   @override
@@ -151,7 +193,14 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
         actions: [
-          if (!_showSearchBar)
+          if (!_showSearchBar) ...[
+            IconButton(
+              icon: Icon(Icons.picture_as_pdf, color: Colors.redAccent, size: 28),
+              tooltip: 'Export Today PDF',
+              onPressed: () async {
+                await _exportTodayPdf(context);
+              },
+            ),
             Container(
               margin: const EdgeInsets.only(right: 8),
               child: IconButton(
@@ -164,6 +213,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
+          ],
         ],
       ),
       body: SafeArea(
