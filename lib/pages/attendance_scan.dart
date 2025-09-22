@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:lapabricks/pages/labour_detail_page.dart';
 import 'package:lapabricks/providers/labour_store.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:vibration/vibration.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class AttendanceScanPage extends StatefulWidget {
   const AttendanceScanPage({super.key});
@@ -16,8 +17,8 @@ class AttendanceScanPage extends StatefulWidget {
 class _AttendanceScanPageState extends State<AttendanceScanPage> {
   late final MobileScannerController _controller;
   bool _handling = false;
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
-  // Modern color scheme matching other pages
   static const Color primaryBlue = Color(0xFF2563EB);
   static const Color lightBlue = Color(0xFF3B82F6);
   static const Color accentTeal = Color(0xFF06B6D4);
@@ -38,6 +39,7 @@ class _AttendanceScanPageState extends State<AttendanceScanPage> {
   @override
   void dispose() {
     _controller.dispose();
+    _audioPlayer.dispose();
     super.dispose();
   }
 
@@ -53,6 +55,73 @@ class _AttendanceScanPageState extends State<AttendanceScanPage> {
     await FirebaseFirestore.instance.collection('labours').doc(labourId).update({
       'lastScanAt': Timestamp.fromDate(now),
     });
+  }
+
+  Future<void> playSound(bool success) async {
+    String asset = success ? 'sounds/success.mp3' : 'sounds/failure.mp3';
+    await _audioPlayer.play(AssetSource(asset));
+  }
+
+  Future<void> vibrate([bool success = true]) async {
+    if (await Vibration.hasVibrator() ?? false) {
+      if (success) {
+        Vibration.vibrate(duration: 100, amplitude: 128);
+      } else {
+        Vibration.vibrate(duration: 400, amplitude: 255);
+      }
+    }
+  }
+
+  Future<void> _showCentralDialog({required bool success, required String message, Duration? autoClose}) async {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) {
+        return Center(
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: cardWhite,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    success ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                    color: success ? Colors.green : Colors.red,
+                    size: 64,
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 21,
+                      fontWeight: FontWeight.bold,
+                      color: success ? Colors.green : Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    // Auto close dialog after duration (default: 2 seconds)
+    await Future.delayed(autoClose ?? const Duration(seconds: 2));
+    if (Navigator.of(context).canPop()) Navigator.of(context).pop();
   }
 
   Future<void> _showCountdownDialog(Duration duration) async {
@@ -118,7 +187,10 @@ class _AttendanceScanPageState extends State<AttendanceScanPage> {
     try {
       if (value == null) return;
       if (!value.startsWith('labour:')) {
-        await _showInfoDialog('Invalid QR', 'This QR code is not recognized.');
+        await playSound(false);
+        await vibrate(false);
+        await _showCentralDialog(success: false, message: 'Invalid QR\nThis QR code is not recognized.', autoClose: const Duration(seconds: 2));
+        // No need to navigate; scanner remains open
         return;
       }
 
@@ -127,7 +199,9 @@ class _AttendanceScanPageState extends State<AttendanceScanPage> {
       final labour = store.byId(id);
 
       if (labour == null) {
-        await _showInfoDialog('Labour not found', 'This QR does not match any labour profile.');
+        await playSound(false);
+        await vibrate(false);
+        await _showCentralDialog(success: false, message: 'Labour not found\nThis QR does not match any labour profile.', autoClose: const Duration(seconds: 2));
         return;
       }
 
@@ -147,6 +221,9 @@ class _AttendanceScanPageState extends State<AttendanceScanPage> {
       if (lastScan != null) {
         final elapsed = now.difference(lastScan);
         if (elapsed < timeout) {
+          await playSound(false);
+          await vibrate(false);
+          await _showCentralDialog(success: false, message: 'Timeout!\nPlease wait before you can scan again.', autoClose: const Duration(seconds: 2));
           await _showCountdownDialog(timeout - elapsed);
           return; // Don't add attendance or money if in cooldown
         }
@@ -159,42 +236,18 @@ class _AttendanceScanPageState extends State<AttendanceScanPage> {
       // Update scan timestamp in Firestore (global)
       await setLastScanToFirestore(id, now);
 
+      await playSound(true);
+      await vibrate(true);
       await _controller.stop();
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Record Updated ($occupation)'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      await _showCentralDialog(success: true, message: 'Record Updated ($occupation)', autoClose: const Duration(seconds: 2));
 
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => LabourDetailPage(labourId: id),
-        ),
-      );
+      // After success popup, restart scanner for next scan
+      await _controller.start();
     } finally {
       _handling = false;
     }
-  }
-
-  Future<void> _showInfoDialog(String title, String message) async {
-    if (!mounted) return;
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: true,
-      builder: (_) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
   }
 
   @override

@@ -40,7 +40,6 @@ class LabourDetailPage extends StatelessWidget {
     final store = context.watch<LabourStore>();
     final labour = store.byId(labourId);
 
-    // Your modern color scheme
     const Color primaryBlue = Color(0xFF2563EB);
     const Color lightBlue = Color(0xFF3B82F6);
     const Color accentTeal = Color(0xFF06B6D4);
@@ -68,7 +67,7 @@ class LabourDetailPage extends StatelessWidget {
         .toList();
 
     final todayEarnings = todayRecord['earnings'] ?? 0;
-    final todayLifts = todayRecord['lifts'] ?? 0;
+    final todayLifts = labour.occupation != 'Staff' ? (todayRecord['lifts'] ?? 0) : null;
     final monthlyEarnings = labour.monthlyEarnings(DateTime.now());
     final totalEarnings = labour.totalEarnings;
     final liftDetail = parsed['Lift'] ?? '—';
@@ -194,15 +193,52 @@ class LabourDetailPage extends StatelessWidget {
                               backgroundColor: cardWhite,
                             ),
                             const SizedBox(height: 18),
-                            Text(
-                              labour.name,
-                              style: TextStyle(
-                                color: primaryBlue,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 28,
-                                letterSpacing: 1.2,
-                              ),
-                            ),
+                            LayoutBuilder(builder: (context, constraints) {
+                              return Column(
+                                children: [
+                                  // Name (responsive)
+                                  ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      maxWidth: constraints.maxWidth - 48,
+                                    ),
+                                    child: Text(
+                                      labour.name,
+                                      style: TextStyle(
+                                        color: primaryBlue,
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 28,
+                                        letterSpacing: 1.2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      maxLines: 2,
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  // Only show Lift Details if not Staff
+                                  if (labour.occupation != 'Staff')
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.factory,
+                                          color: lightBlue,
+                                          size: 24,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          liftDetail,
+                                          style: TextStyle(
+                                            color: lightBlue,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                ],
+                              );
+                            }),
                             Container(
                               height: 3,
                               width: 60,
@@ -257,12 +293,15 @@ class LabourDetailPage extends StatelessWidget {
                             title: const Text('Phone'),
                             subtitle: Text(formatPhone(parsed['Phone'])),
                           ),
-                          Divider(height: 1),
-                          ListTile(
-                            leading: Icon(Icons.factory, color: lightBlue),
-                            title: const Text('Lift Details'),
-                            subtitle: Text(liftDetail),
-                          ),
+                          // Show Lift Details only if not Staff
+                          if (labour.occupation != 'Staff') ...[
+                            Divider(height: 1),
+                            ListTile(
+                              leading: Icon(Icons.factory, color: lightBlue),
+                              title: const Text('Lift Details'),
+                              subtitle: Text(liftDetail),
+                            ),
+                          ],
                           if (occupation == 'Driver' &&
                               plateNumber != null &&
                               plateNumber.isNotEmpty) ...[
@@ -347,17 +386,22 @@ class LabourDetailPage extends StatelessWidget {
                       ),
                       child: Column(
                         children: [
-                          ListTile(
-                            leading: Icon(Icons.price_change, color: Colors.green),
-                            title: const Text('Per Lift Price'),
-                            subtitle: Text('Rs ${labour.perLiftPrice}'),
-                          ),
-                          Divider(height: 1),
+                          // Per Lift Price only if not Staff
+                          if (labour.occupation != 'Staff') ...[
+                            ListTile(
+                              leading: Icon(Icons.price_change, color: Colors.green),
+                              title: const Text('Per Lift Price'),
+                              subtitle: Text('Rs ${labour.perLiftPrice}'),
+                            ),
+                            Divider(height: 1),
+                          ],
                           ListTile(
                             leading: Icon(Icons.today, color: lightBlue),
                             title: const Text("Today's Earnings"),
                             subtitle: Text(
-                              'Rs $todayEarnings  (Lifts: $todayLifts)',
+                              labour.occupation != 'Staff'
+                                ? 'Rs $todayEarnings  (Lifts: $todayLifts)'
+                                : 'Rs $todayEarnings',
                             ),
                           ),
                           Divider(height: 1),

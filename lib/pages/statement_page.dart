@@ -5,12 +5,36 @@ class StatementPage extends StatelessWidget {
   final Labour labour;
   const StatementPage({super.key, required this.labour});
 
+  String? getArrivalTime(String date) {
+    final times = labour.attendanceTimes[date];
+    if (times != null && times['arrival'] != null) {
+      final t = times['arrival']!;
+      return "${formatTime(t)}${t.hour < 12 ? ' AM' : ' PM'}";
+    }
+    return null;
+  }
+
+  String? getDepartureTime(String date) {
+    final times = labour.attendanceTimes[date];
+    if (times != null && times['departure'] != null) {
+      final t = times['departure']!;
+      return "${formatTime(t)}${t.hour < 12 ? ' AM' : ' PM'}";
+    }
+    return null;
+  }
+
+  String formatTime(DateTime d) {
+    int hour = d.hour % 12;
+    if (hour == 0) hour = 12;
+    final min = d.minute.toString().padLeft(2, '0');
+    return "$hour:$min";
+  }
+
   @override
   Widget build(BuildContext context) {
     final records = labour.dailyRecords;
     final sortedKeys = records.keys.toList()..sort((a, b) => b.compareTo(a)); // newest first
 
-    // Modern color scheme matching other pages
     const Color primaryBlue = Color(0xFF2563EB);
     const Color lightBlue = Color(0xFF3B82F6);
     const Color accentTeal = Color(0xFF06B6D4);
@@ -92,6 +116,9 @@ class StatementPage extends StatelessWidget {
                 final totalTillNow = labour.dailyRecords.entries
                     .where((e) => e.key.compareTo(date) <= 0)
                     .fold(0, (a, b) => a + (b.value['earnings'] ?? 0));
+                final arrived = getArrivalTime(date);
+                final depart = getDepartureTime(date);
+
                 return Card(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                   elevation: 4,
@@ -114,8 +141,16 @@ class StatementPage extends StatelessWidget {
                         children: [
                           Text('Earnings: Rs ${record['earnings']}',
                               style: const TextStyle(color: darkGray, fontWeight: FontWeight.w500)),
-                          Text('Lifts: ${record['lifts']}',
-                              style: const TextStyle(color: lightGray, fontWeight: FontWeight.w500)),
+                          // Only show lifts for non-staff
+                          if (labour.occupation != 'Staff')
+                            Text('Lifts: ${record['lifts']}',
+                                style: const TextStyle(color: lightGray, fontWeight: FontWeight.w500)),
+                          if (arrived != null)
+                            Text('Arrived: $arrived',
+                                style: const TextStyle(color: darkGray, fontWeight: FontWeight.w500)),
+                          if (depart != null)
+                            Text('Departed: $depart',
+                                style: const TextStyle(color: lightGray, fontWeight: FontWeight.w500)),
                         ],
                       ),
                     ),
@@ -152,8 +187,16 @@ class StatementPage extends StatelessWidget {
                               const SizedBox(height: 18),
                               Text('Earnings: Rs ${record['earnings']}',
                                   style: const TextStyle(fontSize: 16, color: darkGray)),
-                              Text('Lifts: ${record['lifts']}',
-                                  style: const TextStyle(fontSize: 16, color: lightGray)),
+                              // Only show lifts for non-staff
+                              if (labour.occupation != 'Staff')
+                                Text('Lifts: ${record['lifts']}',
+                                    style: const TextStyle(fontSize: 16, color: lightGray)),
+                              if (arrived != null)
+                                Text('Arrived: $arrived',
+                                    style: const TextStyle(fontSize: 15, color: darkGray)),
+                              if (depart != null)
+                                Text('Departed: $depart',
+                                    style: const TextStyle(fontSize: 15, color: lightGray)),
                               const Divider(height: 30),
                               Text(
                                 'Total till now: Rs $totalTillNow',

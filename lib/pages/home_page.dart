@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lapabricks/pages/add_labour_page.dart';
 import 'package:lapabricks/pages/labour_detail_page.dart';
+import 'package:lapabricks/pages/daily_total_page.dart'; // <-- Import your new page
 import 'package:lapabricks/providers/labour_store.dart';
 import 'package:provider/provider.dart';
 
@@ -67,6 +68,17 @@ class _HomePageState extends State<HomePage> {
         shadowColor: Colors.black.withOpacity(0.1),
         titleSpacing: 0,
         centerTitle: true,
+        leading: !_showSearchBar
+            ? IconButton(
+                icon: Icon(Icons.stacked_line_chart, color: accentTeal, size: 28),
+                tooltip: 'Daily Statement',
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const DailyTotalPage()),
+                  );
+                },
+              )
+            : null,
         title: _showSearchBar
             ? Container(
                 height: 45,
@@ -166,7 +178,6 @@ class _HomePageState extends State<HomePage> {
             return Center(
               child: Container(
                 constraints: BoxConstraints(maxWidth: maxWidth),
-                // Only a small bottom padding for aesthetics, not for FAB/navbar!
                 padding: const EdgeInsets.only(
                   top: 20,
                   left: 16,
@@ -336,17 +347,9 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       floatingActionButton: !_showSearchBar
-          ? FloatingActionButton.extended(
+          ? FloatingActionButton(
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const AddLabourPage()),
-              ),
-              icon: const Icon(Icons.add_rounded, size: 24),
-              label: const Text(
-                'Add Labour',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                ),
               ),
               backgroundColor: primaryBlue,
               foregroundColor: Colors.white,
@@ -354,6 +357,7 @@ class _HomePageState extends State<HomePage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
+              child: const Icon(Icons.add_rounded, size: 32),
             )
           : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,

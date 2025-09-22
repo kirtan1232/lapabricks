@@ -2,18 +2,25 @@ class Labour {
   final String id;
   final String name;
   final String details;
+  final String occupation; // "Labour", "Driver", "Staff"
   final List<DateTime> attendance;
   final int perLiftPrice;
+  final int? dailyIncome; // Only for staff
   // key: 'yyyy-MM-dd', value: { 'earnings': X, 'lifts': Y }
   final Map<String, Map<String, int>> dailyRecords;
+  // key: 'yyyy-MM-dd', value: { 'arrival': DateTime, 'departure': DateTime }
+  final Map<String, Map<String, DateTime>> attendanceTimes;
 
   Labour({
     required this.id,
     required this.name,
     required this.details,
+    required this.occupation,
     this.attendance = const [],
     required this.perLiftPrice,
+    this.dailyIncome,
     this.dailyRecords = const {},
+    this.attendanceTimes = const {},
   });
 
   int get totalEarnings => dailyRecords.values.fold(0, (a, b) => a + (b['earnings'] ?? 0));
@@ -29,17 +36,23 @@ class Labour {
     String? id,
     String? name,
     String? details,
+    String? occupation,
     List<DateTime>? attendance,
     int? perLiftPrice,
+    int? dailyIncome,
     Map<String, Map<String, int>>? dailyRecords,
+    Map<String, Map<String, DateTime>>? attendanceTimes,
   }) {
     return Labour(
       id: id ?? this.id,
       name: name ?? this.name,
       details: details ?? this.details,
+      occupation: occupation ?? this.occupation,
       attendance: attendance ?? this.attendance,
       perLiftPrice: perLiftPrice ?? this.perLiftPrice,
+      dailyIncome: dailyIncome ?? this.dailyIncome,
       dailyRecords: dailyRecords ?? this.dailyRecords,
+      attendanceTimes: attendanceTimes ?? this.attendanceTimes,
     );
   }
 
@@ -48,22 +61,49 @@ class Labour {
       'id': id,
       'name': name,
       'details': details,
+      'occupation': occupation,
       'attendance': attendance.map((d) => d.toIso8601String()).toList(),
       'perLiftPrice': perLiftPrice,
+      'dailyIncome': dailyIncome,
       'dailyRecords': dailyRecords,
+      'attendanceTimes': attendanceTimes.map((date, times) => MapEntry(
+        date,
+        {
+          if (times['arrival'] != null) 'arrival': times['arrival']!.toIso8601String(),
+          if (times['departure'] != null) 'departure': times['departure']!.toIso8601String(),
+        }
+      )),
     };
   }
 
   static Labour fromMap(Map<String, dynamic> map) {
+    final attendanceTimesRaw = map['attendanceTimes'] as Map<String, dynamic>? ?? {};
+    final attendanceTimes = <String, Map<String, DateTime>>{};
+    attendanceTimesRaw.forEach((date, timesRaw) {
+      final timesMap = <String, DateTime>{};
+      if (timesRaw is Map) {
+        if (timesRaw['arrival'] != null) {
+          timesMap['arrival'] = DateTime.parse(timesRaw['arrival']);
+        }
+        if (timesRaw['departure'] != null) {
+          timesMap['departure'] = DateTime.parse(timesRaw['departure']);
+        }
+      }
+      attendanceTimes[date] = timesMap;
+    });
+
     return Labour(
       id: map['id'] ?? '',
       name: map['name'] ?? '',
       details: map['details'] ?? '',
+      occupation: map['occupation'] ?? 'Labour',
       attendance: (map['attendance'] as List<dynamic>? ?? []).map((d) => DateTime.parse(d as String)).toList(),
       perLiftPrice: map['perLiftPrice'] ?? 0,
+      dailyIncome: map['dailyIncome'],
       dailyRecords: Map<String, Map<String, int>>.from(
         (map['dailyRecords'] ?? {}).map((k, v) => MapEntry(k, Map<String, int>.from(v)))
       ),
+      attendanceTimes: attendanceTimes,
     );
   }
 }

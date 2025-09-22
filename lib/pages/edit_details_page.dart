@@ -17,11 +17,12 @@ class _EditDetailsPageState extends State<EditDetailsPage> {
   late TextEditingController _phoneCtrl;
   late TextEditingController _liftCtrl;
   late TextEditingController _perLiftPriceCtrl;
+  late TextEditingController _dailyIncomeCtrl;
   String _occupation = 'Labour';
   String? _vehicleNumber;
   String? _brickType;
 
-  static const List<String> occupations = ['Labour', 'Driver'];
+  static const List<String> occupations = ['Labour', 'Driver', 'Staff'];
   static const List<String> brickTypes = ['Kacho Brick', 'Pako Brick'];
 
   // Colors
@@ -68,6 +69,9 @@ class _EditDetailsPageState extends State<EditDetailsPage> {
     _liftCtrl = TextEditingController(text: parsed['Lift'] ?? '');
     _perLiftPriceCtrl = TextEditingController(text: labour?.perLiftPrice.toString() ?? '');
     _brickType = brickTypes.contains(parsed['Brick Type']) ? parsed['Brick Type'] : null;
+    _dailyIncomeCtrl = TextEditingController(
+      text: labour?.dailyIncome?.toString() ?? parsed['Daily Income'] ?? ''
+    );
   }
 
   @override
@@ -77,6 +81,7 @@ class _EditDetailsPageState extends State<EditDetailsPage> {
     _phoneCtrl.dispose();
     _liftCtrl.dispose();
     _perLiftPriceCtrl.dispose();
+    _dailyIncomeCtrl.dispose();
     super.dispose();
   }
 
@@ -136,22 +141,31 @@ class _EditDetailsPageState extends State<EditDetailsPage> {
     }
     if (_formKey.currentState?.validate() ?? false) {
       final store = context.read<LabourStore>();
+
       final details = [
         'Occupation: $_occupation',
         'Address: ${_addressCtrl.text.trim()}',
         'Phone: +977-${_phoneCtrl.text.trim()}',
         if (_occupation == 'Driver') 'Vehicle Plate: $_vehicleNumber',
-        'Lift: ${_liftCtrl.text.trim()}',
+        if (_occupation == 'Labour') 'Lift: ${_liftCtrl.text.trim()}',
+        if (_occupation == 'Staff') 'Daily Income: ${_dailyIncomeCtrl.text.trim()}',
         'Brick Type: ${_brickType ?? ''}',
       ].join('\n');
 
-      final perLiftPrice = int.tryParse(_perLiftPriceCtrl.text.trim()) ?? 0;
+      final perLiftPrice = _occupation == 'Staff'
+          ? 0
+          : int.tryParse(_perLiftPriceCtrl.text.trim()) ?? 0;
+      final dailyIncome = _occupation == 'Staff'
+          ? int.tryParse(_dailyIncomeCtrl.text.trim())
+          : null;
 
       store.editLabour(
         id: widget.labourId,
         name: _nameCtrl.text.trim(),
         details: details,
+        occupation: _occupation,
         perLiftPrice: perLiftPrice,
+        dailyIncome: dailyIncome,
       );
       Navigator.of(context).pop(true);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -250,7 +264,7 @@ class _EditDetailsPageState extends State<EditDetailsPage> {
                         child: Column(
                           children: [
                             Text(
-                              'Edit Labour Details',
+                              'Edit Labour/Staff Details',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 20,
@@ -291,7 +305,11 @@ class _EditDetailsPageState extends State<EditDetailsPage> {
                                   child: Row(
                                     children: [
                                       Icon(
-                                        occ == 'Driver' ? Icons.local_shipping : Icons.build,
+                                        occ == 'Driver'
+                                            ? Icons.local_shipping
+                                            : occ == 'Staff'
+                                                ? Icons.person_outline
+                                                : Icons.build,
                                         size: 20,
                                       ),
                                       const SizedBox(width: 8),
@@ -380,62 +398,81 @@ class _EditDetailsPageState extends State<EditDetailsPage> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      DropdownButtonFormField<String>(
-                        decoration: _inputDecoration(
-                          label: 'Brick Type',
-                          icon: Icons.account_tree_rounded,
+
+                      if (_occupation == 'Staff')
+                        _buildInput(
+                          controller: _dailyIncomeCtrl,
+                          label: 'Daily Income',
+                          icon: Icons.attach_money,
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty)
+                              return 'Enter daily income';
+                            if (!RegExp(r'^[0-9]+$').hasMatch(v))
+                              return 'Only numbers allowed';
+                            return null;
+                          },
+                          type: TextInputType.number,
                         ),
-                        value: _brickType,
-                        items: brickTypes
-                            .map((type) => DropdownMenuItem(
-                                  value: type,
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.circle,
-                                        color: type == 'Kacho Brick'
-                                            ? Colors.brown
-                                            : Colors.redAccent,
-                                        size: 16,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(type, style: TextStyle(color: Colors.black)),
-                                    ],
-                                  ),
-                                ))
-                            .toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _brickType = value;
-                          });
-                        },
-                        validator: (value) =>
-                            (value == null || value.isEmpty) ? 'Select brick type' : null,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildInput(
-                        controller: _liftCtrl,
-                        label: 'Lift',
-                        icon: Icons.line_weight_rounded,
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) return 'Enter lift';
-                          if (!RegExp(r'^[0-9]+$').hasMatch(v)) return 'Only numbers allowed';
-                          return null;
-                        },
-                        type: TextInputType.number,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildInput(
-                        controller: _perLiftPriceCtrl,
-                        label: 'Per Lift Price',
-                        icon: Icons.attach_money_rounded,
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) return 'Enter price';
-                          if (!RegExp(r'^[0-9]+$').hasMatch(v)) return 'Only numbers allowed';
-                          return null;
-                        },
-                        type: TextInputType.number,
-                      ),
+
+                      if (_occupation != 'Staff') ...[
+                        DropdownButtonFormField<String>(
+                          decoration: _inputDecoration(
+                            label: 'Brick Type',
+                            icon: Icons.account_tree_rounded,
+                          ),
+                          value: _brickType,
+                          items: brickTypes
+                              .map((type) => DropdownMenuItem(
+                                    value: type,
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.circle,
+                                          color: type == 'Kacho Brick'
+                                              ? Colors.brown
+                                              : Colors.redAccent,
+                                          size: 16,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(type, style: TextStyle(color: Colors.black)),
+                                      ],
+                                    ),
+                                  ))
+                              .toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _brickType = value;
+                            });
+                          },
+                          validator: (value) =>
+                              (value == null || value.isEmpty) ? 'Select brick type' : null,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildInput(
+                          controller: _liftCtrl,
+                          label: 'Lift',
+                          icon: Icons.line_weight_rounded,
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) return 'Enter lift';
+                            if (!RegExp(r'^[0-9]+$').hasMatch(v)) return 'Only numbers allowed';
+                            return null;
+                          },
+                          type: TextInputType.number,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildInput(
+                          controller: _perLiftPriceCtrl,
+                          label: 'Per Lift Price',
+                          icon: Icons.attach_money_rounded,
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) return 'Enter price';
+                            if (!RegExp(r'^[0-9]+$').hasMatch(v)) return 'Only numbers allowed';
+                            return null;
+                          },
+                          type: TextInputType.number,
+                        ),
+                      ],
+
                       const SizedBox(height: 22),
                       SizedBox(
                         width: double.infinity,

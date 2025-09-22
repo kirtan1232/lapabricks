@@ -18,12 +18,13 @@ class _AddLabourPageState extends State<AddLabourPage> {
   final _phoneCtrl = TextEditingController();
   final _liftCtrl = TextEditingController();
   final _perLiftPriceCtrl = TextEditingController();
+  final _dailyIncomeCtrl = TextEditingController();
   String _countryCode = '+977';
   String? _occupation;
   String? _vehicleNumber;
   String? _brickType;
 
-  final List<String> occupations = ['Labour', 'Driver'];
+  final List<String> occupations = ['Labour', 'Driver', 'Staff'];
   final List<String> brickTypes = ['Kacho Brick', 'Pako Brick'];
 
   // Colors
@@ -39,6 +40,7 @@ class _AddLabourPageState extends State<AddLabourPage> {
     _phoneCtrl.dispose();
     _liftCtrl.dispose();
     _perLiftPriceCtrl.dispose();
+    _dailyIncomeCtrl.dispose();
     super.dispose();
   }
 
@@ -125,17 +127,25 @@ class _AddLabourPageState extends State<AddLabourPage> {
         'Address: ${_addressCtrl.text.trim()}',
         'Phone: $_countryCode-${_phoneCtrl.text.trim()}',
         if (_occupation == 'Driver') 'Vehicle Plate: $_vehicleNumber',
-        'Lift: ${_liftCtrl.text.trim()}',
+        if (_occupation == 'Labour') 'Lift: ${_liftCtrl.text.trim()}',
+        if (_occupation == 'Staff') 'Daily Income: ${_dailyIncomeCtrl.text.trim()}',
         'Brick Type: ${_brickType ?? ''}',
       ].join('\n');
 
       final store = context.read<LabourStore>();
-      final perLiftPrice = int.tryParse(_perLiftPriceCtrl.text.trim()) ?? 0;
+      final perLiftPrice = _occupation == 'Staff'
+          ? 0
+          : int.tryParse(_perLiftPriceCtrl.text.trim()) ?? 0;
+      final dailyIncome = _occupation == 'Staff'
+          ? int.tryParse(_dailyIncomeCtrl.text.trim())
+          : null;
 
       final labour = store.addLabour(
         name: _nameCtrl.text.trim(),
         details: details,
+        occupation: _occupation ?? '',
         perLiftPrice: perLiftPrice,
+        dailyIncome: dailyIncome,
       );
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
@@ -227,11 +237,11 @@ class _AddLabourPageState extends State<AddLabourPage> {
                         child: Column(
                           children: [
                             Text(
-                              'New Labour Details',
+                              'New Labour/Staff Details',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 20,
-                                color: primaryBlue, // Now blue
+                                color: primaryBlue,
                               ),
                             ),
                             Container(
@@ -274,7 +284,9 @@ class _AddLabourPageState extends State<AddLabourPage> {
                                       Icon(
                                         occ == 'Driver'
                                             ? Icons.local_shipping
-                                            : Icons.build,
+                                            : occ == 'Staff'
+                                                ? Icons.person_outline
+                                                : Icons.build,
                                         size: 20,
                                       ),
                                       const SizedBox(width: 8),
@@ -367,68 +379,86 @@ class _AddLabourPageState extends State<AddLabourPage> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      DropdownButtonFormField<String>(
-                        decoration: _inputDecoration(
-                          label: 'Brick Type',
-                          icon: Icons.account_tree_rounded,
+                      if (_occupation == 'Staff')
+                        _buildInput(
+                          controller: _dailyIncomeCtrl,
+                          label: 'Daily Income',
+                          icon: Icons.attach_money,
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty)
+                              return 'Enter daily income';
+                            if (!RegExp(r'^[0-9]+$').hasMatch(v))
+                              return 'Only numbers allowed';
+                            return null;
+                          },
+                          type: TextInputType.number,
                         ),
-                        value: _brickType,
-                        items: brickTypes
-                            .map((type) => DropdownMenuItem(
-                                  value: type,
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.circle,
-                                        color: type == 'Kacho Brick'
-                                            ? Colors.brown
-                                            : Colors.redAccent,
-                                        size: 16,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(type, style: TextStyle(color: Colors.black)),
-                                    ],
-                                  ),
-                                ))
-                            .toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _brickType = value;
-                          });
-                        },
-                        validator: (value) =>
-                            (value == null || value.isEmpty)
-                                ? 'Select brick type'
-                                : null,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildInput(
-                        controller: _liftCtrl,
-                        label: 'Lift',
-                        icon: Icons.line_weight_rounded,
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty)
-                            return 'Enter lift';
-                          if (!RegExp(r'^[0-9]+$').hasMatch(v))
-                            return 'Only numbers allowed';
-                          return null;
-                        },
-                        type: TextInputType.number,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildInput(
-                        controller: _perLiftPriceCtrl,
-                        label: 'Per Lift Price',
-                        icon: Icons.attach_money_rounded,
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty)
-                            return 'Enter price';
-                          if (!RegExp(r'^[0-9]+$').hasMatch(v))
-                            return 'Only numbers allowed';
-                          return null;
-                        },
-                        type: TextInputType.number,
-                      ),
+                      if (_occupation != 'Staff') ...[
+                        DropdownButtonFormField<String>(
+                          decoration: _inputDecoration(
+                            label: 'Brick Type',
+                            icon: Icons.account_tree_rounded,
+                          ),
+                          value: _brickType,
+                          items: brickTypes
+                              .map((type) => DropdownMenuItem(
+                                    value: type,
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.circle,
+                                          color: type == 'Kacho Brick'
+                                              ? Colors.brown
+                                              : Colors.redAccent,
+                                          size: 16,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(type,
+                                            style:
+                                                TextStyle(color: Colors.black)),
+                                      ],
+                                    ),
+                                  ))
+                              .toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _brickType = value;
+                            });
+                          },
+                          validator: (value) =>
+                              (value == null || value.isEmpty)
+                                  ? 'Select brick type'
+                                  : null,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildInput(
+                          controller: _liftCtrl,
+                          label: 'Lift',
+                          icon: Icons.line_weight_rounded,
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty)
+                              return 'Enter lift';
+                            if (!RegExp(r'^[0-9]+$').hasMatch(v))
+                              return 'Only numbers allowed';
+                            return null;
+                          },
+                          type: TextInputType.number,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildInput(
+                          controller: _perLiftPriceCtrl,
+                          label: 'Per Lift Price',
+                          icon: Icons.attach_money_rounded,
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty)
+                              return 'Enter price';
+                            if (!RegExp(r'^[0-9]+$').hasMatch(v))
+                              return 'Only numbers allowed';
+                            return null;
+                          },
+                          type: TextInputType.number,
+                        ),
+                      ],
                       const SizedBox(height: 22),
                       SizedBox(
                         width: double.infinity,
@@ -444,7 +474,7 @@ class _AddLabourPageState extends State<AddLabourPage> {
                           ),
                           icon: const Icon(Icons.save_rounded),
                           label: const Text(
-                            'Save Labour',
+                            'Save',
                             style:
                                 TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                           ),
@@ -469,7 +499,8 @@ class _AddLabourPageState extends State<AddLabourPage> {
     return InputDecoration(
       labelText: label,
       prefixIcon: Icon(icon),
-      labelStyle: const TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
+      labelStyle:
+          const TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
       filled: true,
       fillColor: backgroundGray,
       border: OutlineInputBorder(
