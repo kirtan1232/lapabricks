@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lapabricks/pages/add_labour_page.dart';
 import 'package:lapabricks/pages/labour_detail_page.dart';
 import 'package:lapabricks/pages/daily_total_page.dart';
-import 'package:lapabricks/pages/pdf_preview_page.dart'; // <-- Import your PDF preview page
+import 'package:lapabricks/pages/pdf_view_page.dart';
 import 'package:lapabricks/providers/labour_store.dart';
 import 'package:provider/provider.dart';
 
@@ -64,7 +64,7 @@ class _HomePageState extends State<HomePage> {
     );
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => PdfPreviewPage(
+        builder: (_) => PdfViewPage(
           date: dateStr,
           labours: labours,
           dailyTotal: todayTotal!,

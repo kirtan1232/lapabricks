@@ -49,5 +49,9 @@
 		<false/>
 		<key>NSFaceIDUsageDescription</key>
 		<string>Used for biometric authentication</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Need access to save PDF</string>
+		<key>NSDocumentsFolderUsageDescription</key>
+		<string>Need access to save PDF</string>
 	</dict>
 </plist>
