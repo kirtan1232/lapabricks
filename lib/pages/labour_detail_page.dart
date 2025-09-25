@@ -45,8 +45,6 @@ class LabourDetailPage extends StatelessWidget {
     const Color accentTeal = Color(0xFF06B6D4);
     const Color backgroundGray = Color(0xFFF8FAFC);
     const Color cardWhite = Color(0xFFFFFFFF);
-    const Color darkGray = Color(0xFF1E293B);
-    const Color lightGray = Color(0xFF64748B);
 
     if (labour == null) {
       return const Scaffold(body: Center(child: Text('Labour not found')));
@@ -74,6 +72,10 @@ class LabourDetailPage extends StatelessWidget {
     final occupation = parsed['Occupation'] ?? '—';
     final plateNumber = parsed['Vehicle Plate'];
     final brickType = parsed['Brick Type'] ?? '—';
+
+    // Brick lift logic
+    int perDayBricks = store.todayBricks(labour.id);
+    int totalBricks = store.totalBricks(labour.id);
 
     return Scaffold(
       backgroundColor: backgroundGray,
@@ -293,7 +295,6 @@ class LabourDetailPage extends StatelessWidget {
                             title: const Text('Phone'),
                             subtitle: Text(formatPhone(parsed['Phone'])),
                           ),
-                          // Show Lift Details only if not Staff
                           if (labour.occupation != 'Staff') ...[
                             Divider(height: 1),
                             ListTile(
@@ -386,7 +387,6 @@ class LabourDetailPage extends StatelessWidget {
                       ),
                       child: Column(
                         children: [
-                          // Per Lift Price only if not Staff
                           if (labour.occupation != 'Staff') ...[
                             ListTile(
                               leading: Icon(Icons.price_change, color: Colors.green),
@@ -419,6 +419,43 @@ class LabourDetailPage extends StatelessWidget {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 22),
+
+                    // Brick Lift Summary
+                    if (labour.occupation != 'Staff') ...[
+                      Text(
+                        'Brick Lift Summary',
+                        style: TextStyle(
+                          color: accentTeal,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Card(
+                        elevation: 1,
+                        color: cardWhite,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          children: [
+                            ListTile(
+                              leading: Icon(Icons.today, color: lightBlue),
+                              title: const Text("Per Day Brick Lift"),
+                              subtitle: Text('$perDayBricks'),
+                            ),
+                            Divider(height: 1),
+                            ListTile(
+                              leading: Icon(Icons.all_inbox, color: accentTeal),
+                              title: const Text("Total Brick Lift"),
+                              subtitle: Text('$totalBricks'),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 22),
+                    ],
                   ],
                 ),
               ),

@@ -6,6 +6,7 @@ class Labour {
   final List<DateTime> attendance;
   final int perLiftPrice;
   final int? dailyIncome; // Only for staff
+  final String? brickType; // <-- ADD THIS LINE
   // key: 'yyyy-MM-dd', value: { 'earnings': X, 'lifts': Y }
   final Map<String, Map<String, int>> dailyRecords;
   // key: 'yyyy-MM-dd', value: { 'arrival': DateTime, 'departure': DateTime }
@@ -19,6 +20,7 @@ class Labour {
     this.attendance = const [],
     required this.perLiftPrice,
     this.dailyIncome,
+    this.brickType, // <-- ADD THIS LINE
     this.dailyRecords = const {},
     this.attendanceTimes = const {},
   });
@@ -40,6 +42,7 @@ class Labour {
     List<DateTime>? attendance,
     int? perLiftPrice,
     int? dailyIncome,
+    String? brickType, // <-- ADD THIS LINE
     Map<String, Map<String, int>>? dailyRecords,
     Map<String, Map<String, DateTime>>? attendanceTimes,
   }) {
@@ -51,6 +54,7 @@ class Labour {
       attendance: attendance ?? this.attendance,
       perLiftPrice: perLiftPrice ?? this.perLiftPrice,
       dailyIncome: dailyIncome ?? this.dailyIncome,
+      brickType: brickType ?? this.brickType, // <-- ADD THIS LINE
       dailyRecords: dailyRecords ?? this.dailyRecords,
       attendanceTimes: attendanceTimes ?? this.attendanceTimes,
     );
@@ -65,6 +69,7 @@ class Labour {
       'attendance': attendance.map((d) => d.toIso8601String()).toList(),
       'perLiftPrice': perLiftPrice,
       'dailyIncome': dailyIncome,
+      'brickType': brickType, // <-- ADD THIS LINE
       'dailyRecords': dailyRecords,
       'attendanceTimes': attendanceTimes.map((date, times) => MapEntry(
         date,
@@ -100,6 +105,7 @@ class Labour {
       attendance: (map['attendance'] as List<dynamic>? ?? []).map((d) => DateTime.parse(d as String)).toList(),
       perLiftPrice: map['perLiftPrice'] ?? 0,
       dailyIncome: map['dailyIncome'],
+      brickType: map['brickType'], // <-- ADD THIS LINE
       dailyRecords: Map<String, Map<String, int>>.from(
         (map['dailyRecords'] ?? {}).map((k, v) => MapEntry(k, Map<String, int>.from(v)))
       ),

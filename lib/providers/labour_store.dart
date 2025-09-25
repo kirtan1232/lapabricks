@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lapabricks/models/labour.dart';
 import 'package:lapabricks/models/daily_total.dart';
+import 'package:lapabricks/models/brick_record.dart'; // <-- Create this file/model!
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum MarkAttendanceResult { success, alreadyMarked, notFound, departureMarked }
@@ -12,6 +13,9 @@ class LabourStore extends ChangeNotifier {
   bool get loaded => _loaded;
 
   final Map<String, DateTime> scanCooldowns = {};
+
+  // --- NEW: Brick records, format: {labourId: {date: bricks}}
+  final Map<String, Map<String, int>> _brickRecords = {};
 
   LabourStore() {
     loadLaboursAsync();
@@ -93,6 +97,7 @@ class LabourStore extends ChangeNotifier {
     FirebaseFirestore.instance.collection('labours').doc(id).delete();
     _labours.remove(id);
     scanCooldowns.remove(id);
+    _brickRecords.remove(id);
     _saveScanCooldowns();
     notifyListeners();
   }
@@ -119,7 +124,7 @@ class LabourStore extends ChangeNotifier {
         final newDailyRecords = Map<String, Map<String, int>>.from(labour.dailyRecords);
         newDailyRecords[todayStr] = {
           'earnings': labour.dailyIncome ?? 0,
-          'lifts': 0, // Staff lifts are always zero, but not counted in daily totals.
+          'lifts': 0,
         };
         final updatedLabour = labour.copyWith(
           attendance: updatedAttendance,
@@ -132,7 +137,6 @@ class LabourStore extends ChangeNotifier {
         updateDailyTotals(now);
         return MarkAttendanceResult.success;
       } else {
-        // All subsequent scans: update departure
         attendanceTimes[todayStr]!['departure'] = now;
         final updatedLabour = labour.copyWith(
           attendanceTimes: attendanceTimes,
@@ -153,7 +157,6 @@ class LabourStore extends ChangeNotifier {
       }
     }
 
-    // Labour/Driver: first scan sets arrival, then updates departure (multiple scans possible)
     if (!attendanceTimes.containsKey(todayStr) || attendanceTimes[todayStr]!['arrival'] == null) {
       attendanceTimes[todayStr] = {
         'arrival': now,
@@ -200,7 +203,7 @@ class LabourStore extends ChangeNotifier {
   void addLift(String id) {
     final labour = _labours[id];
     if (labour != null) {
-      if (labour.occupation == 'Staff') return; // Never add lift for staff
+      if (labour.occupation == 'Staff') return;
       final now = DateTime.now();
       final todayStr = "${now.year.toString().padLeft(4, '0')}-"
           "${now.month.toString().padLeft(2, '0')}-"
@@ -218,9 +221,48 @@ class LabourStore extends ChangeNotifier {
       });
       _labours[id] = updatedLabour;
       notifyListeners();
+      // --- IMPORTANT: Also update brick count per scan
+      addBricksForScan(id);
       updateDailyTotals(now);
     }
   }
+
+  // -------------- NEW BRICK LOGIC -----------------
+  void addBricksForScan(String id) {
+    final labour = _labours[id];
+    if (labour == null) return;
+    final liftDetail = _parseLiftDetail(labour.details);
+    final now = DateTime.now();
+    final todayStr = "${now.year.toString().padLeft(4, '0')}-"
+        "${now.month.toString().padLeft(2, '0')}-"
+        "${now.day.toString().padLeft(2, '0')}";
+    _brickRecords.putIfAbsent(id, () => {});
+    _brickRecords[id]![todayStr] = (_brickRecords[id]![todayStr] ?? 0) + liftDetail;
+    // If you want to persist this to Firestore, add here.
+    notifyListeners();
+  }
+
+  int todayBricks(String id) {
+    final todayStr = "${DateTime.now().year.toString().padLeft(4, '0')}-"
+        "${DateTime.now().month.toString().padLeft(2, '0')}-"
+        "${DateTime.now().day.toString().padLeft(2, '0')}";
+    return _brickRecords[id]?[todayStr] ?? 0;
+  }
+
+  int totalBricks(String id) {
+    if (!_brickRecords.containsKey(id)) return 0;
+    int total = 0;
+    _brickRecords[id]!.values.forEach((c) => total += c);
+    return total;
+  }
+
+  int _parseLiftDetail(String details) {
+    final regex = RegExp(r'Lift:\s*(\d+)');
+    final match = regex.firstMatch(details);
+    if (match != null) return int.tryParse(match.group(1) ?? '1') ?? 1;
+    return 1;
+  }
+  // ------------------------------------------------
 
   Future<void> updateDailyTotals(DateTime date) async {
     final todayStr = "${date.year.toString().padLeft(4, '0')}-"
@@ -242,12 +284,11 @@ class LabourStore extends ChangeNotifier {
           driver_earnings += record['earnings'] ?? 0;
         } else if (l.occupation == 'Staff') {
           staff_earnings += record['earnings'] ?? 0;
-          // ignore lifts for staff
         }
       }
     }
 
-    final overall_lifts = labour_lifts + driver_lifts; // staff don't lift
+    final overall_lifts = labour_lifts + driver_lifts;
     final overall_earnings = labour_earnings + driver_earnings + staff_earnings;
 
     final dailyTotal = DailyTotal(

@@ -127,7 +127,7 @@ class _AddLabourPageState extends State<AddLabourPage> {
         'Address: ${_addressCtrl.text.trim()}',
         'Phone: $_countryCode-${_phoneCtrl.text.trim()}',
         if (_occupation == 'Driver') 'Vehicle Plate: $_vehicleNumber',
-        if (_occupation == 'Labour') 'Lift: ${_liftCtrl.text.trim()}',
+        if (_occupation == 'Labour' || _occupation == 'Driver') 'Lift: ${_liftCtrl.text.trim()}', // <-- FIX: add Lift for Driver too
         if (_occupation == 'Staff') 'Daily Income: ${_dailyIncomeCtrl.text.trim()}',
         'Brick Type: ${_brickType ?? ''}',
       ].join('\n');

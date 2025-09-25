@@ -30,10 +30,18 @@ class StatementPage extends StatelessWidget {
     return "$hour:$min";
   }
 
+  int getLiftDetail(String details) {
+    final regex = RegExp(r'Lift:\s*(\d+)');
+    final match = regex.firstMatch(details);
+    if (match != null) return int.tryParse(match.group(1) ?? '1') ?? 1;
+    return 1;
+  }
+
   @override
   Widget build(BuildContext context) {
     final records = labour.dailyRecords;
-    final sortedKeys = records.keys.toList()..sort((a, b) => b.compareTo(a)); // newest first
+    final sortedKeys = records.keys.toList()..sort((a, b) => b.compareTo(a));
+    final liftDetail = getLiftDetail(labour.details);
 
     const Color primaryBlue = Color(0xFF2563EB);
     const Color lightBlue = Color(0xFF3B82F6);
@@ -42,6 +50,9 @@ class StatementPage extends StatelessWidget {
     const Color cardWhite = Color(0xFFFFFFFF);
     const Color darkGray = Color(0xFF1E293B);
     const Color lightGray = Color(0xFF64748B);
+
+    // Calculate running total bricks
+    int runningBricksTotal = 0;
 
     return Scaffold(
       backgroundColor: backgroundGray,
@@ -113,11 +124,26 @@ class StatementPage extends StatelessWidget {
               itemBuilder: (context, idx) {
                 final date = sortedKeys[idx];
                 final record = records[date]!;
+                final earnings = record['earnings'] ?? 0;
+                final lifts = record['lifts'] ?? 0;
+                final arrived = getArrivalTime(date);
+                final depart = getDepartureTime(date);
+
+                final bricksLifted = (labour.occupation != 'Staff') ? (lifts * liftDetail) : 0;
+                runningBricksTotal += bricksLifted;
+
                 final totalTillNow = labour.dailyRecords.entries
                     .where((e) => e.key.compareTo(date) <= 0)
                     .fold(0, (a, b) => a + (b.value['earnings'] ?? 0));
-                final arrived = getArrivalTime(date);
-                final depart = getDepartureTime(date);
+
+                int totalBricksTillNow = 0;
+                labour.dailyRecords.entries
+                    .where((e) => e.key.compareTo(date) <= 0)
+                    .forEach((e) {
+                  if (labour.occupation != 'Staff') {
+                    totalBricksTillNow += (e.value['lifts'] ?? 0) * liftDetail;
+                  }
+                });
 
                 return Card(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
@@ -139,11 +165,10 @@ class StatementPage extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Earnings: Rs ${record['earnings']}',
+                          Text('Earnings: Rs $earnings',
                               style: const TextStyle(color: darkGray, fontWeight: FontWeight.w500)),
-                          // Only show lifts for non-staff
                           if (labour.occupation != 'Staff')
-                            Text('Lifts: ${record['lifts']}',
+                            Text('Lifts: $lifts',
                                 style: const TextStyle(color: lightGray, fontWeight: FontWeight.w500)),
                           if (arrived != null)
                             Text('Arrived: $arrived',
@@ -185,11 +210,10 @@ class StatementPage extends StatelessWidget {
                                 ],
                               ),
                               const SizedBox(height: 18),
-                              Text('Earnings: Rs ${record['earnings']}',
+                              Text('Earnings: Rs $earnings',
                                   style: const TextStyle(fontSize: 16, color: darkGray)),
-                              // Only show lifts for non-staff
                               if (labour.occupation != 'Staff')
-                                Text('Lifts: ${record['lifts']}',
+                                Text('Lifts: $lifts',
                                     style: const TextStyle(fontSize: 16, color: lightGray)),
                               if (arrived != null)
                                 Text('Arrived: $arrived',
@@ -197,6 +221,39 @@ class StatementPage extends StatelessWidget {
                               if (depart != null)
                                 Text('Departed: $depart',
                                     style: const TextStyle(fontSize: 15, color: lightGray)),
+
+                              if (labour.occupation != 'Staff') ...[
+                                const Divider(height: 28),
+                                Row(
+                                  children: [
+                                    Icon(Icons.widgets, color: accentTeal),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Bricks Lifted: $bricksLifted',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: accentTeal,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Icon(Icons.all_inbox, color: primaryBlue),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Total Bricks Till Now: $totalBricksTillNow',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: primaryBlue,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                               const Divider(height: 30),
                               Text(
                                 'Total till now: Rs $totalTillNow',

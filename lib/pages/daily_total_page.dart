@@ -5,6 +5,30 @@ import 'package:lapabricks/models/daily_total.dart';
 class DailyTotalPage extends StatelessWidget {
   const DailyTotalPage({super.key});
 
+  // --- ACTUAL BRICK COUNT FUNCTION ---
+  Future<int> calculateTotalBricksForDate(String date) async {
+    final firestore = FirebaseFirestore.instance;
+    final laboursSnapshot = await firestore.collection('labours').get();
+    int brickCount = 0;
+    for (final doc in laboursSnapshot.docs) {
+      final data = doc.data();
+      final details = data['details'] as String? ?? '';
+      final dailyRecords = Map<String, dynamic>.from(data['dailyRecords'] ?? {});
+      // Parse lift detail
+      int liftDetail = 1;
+      final regex = RegExp(r'Lift:\s*(\d+)');
+      final match = regex.firstMatch(details);
+      if (match != null) {
+        liftDetail = int.tryParse(match.group(1) ?? '') ?? 1;
+      }
+      // Get lifts for the date
+      final record = dailyRecords[date] as Map<String, dynamic>?;
+      final lifts = (record?['lifts'] ?? 0) as int;
+      brickCount += liftDetail * lifts;
+    }
+    return brickCount;
+  }
+
   @override
   Widget build(BuildContext context) {
     const Color primaryBlue = Color(0xFF2563EB);
@@ -124,7 +148,7 @@ class DailyTotalPage extends StatelessWidget {
                     showModalBottomSheet(
                       context: context,
                       backgroundColor: cardWhite,
-                      isScrollControlled: true, // <-- Important: allows full height and scrolling!
+                      isScrollControlled: true,
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
                       builder: (_) => SafeArea(
@@ -134,7 +158,6 @@ class DailyTotalPage extends StatelessWidget {
                               left: 22,
                               right: 22,
                               top: 22,
-                              // For bottom, add viewInsets to handle keyboard if needed and safe area
                               bottom: MediaQuery.of(context).viewInsets.bottom + 22,
                             ),
                             child: Column(
@@ -159,11 +182,68 @@ class DailyTotalPage extends StatelessWidget {
                                   ],
                                 ),
                                 const SizedBox(height: 18),
-                                _detailRow('Labour', dt.labourTotalLifts, dt.labourTotalEarnings, darkGray, lightGray),
-                                _detailRow('Driver', dt.driverTotalLifts, dt.driverTotalEarnings, darkGray, lightGray),
+                                _detailRow('Labour', dt.labourTotalLifts, dt.labourTotalEarnings, darkGray, lightGray, liftsColor: primaryBlue),
+                                _detailRow('Driver', dt.driverTotalLifts, dt.driverTotalEarnings, darkGray, lightGray, liftsColor: primaryBlue),
                                 _staffDetailRow(dt.staffTotalEarnings, darkGray, lightGray),
                                 const Divider(height: 30),
-                                _detailRow('Overall', dt.overallTotalLifts, dt.overallTotalEarnings, primaryBlue, accentTeal, bold: true),
+                                _detailRow('Overall', dt.overallTotalLifts, dt.overallTotalEarnings, primaryBlue, accentTeal, bold: true, liftsColor: accentTeal), // CYAN color for overall lifts value
+                                // ----- ACTUAL BRICKS LIFT ROW -----
+                                FutureBuilder<int>(
+                                  future: calculateTotalBricksForDate(dt.date),
+                                  builder: (context, snapshot) {
+                                    if (!snapshot.hasData) {
+                                      return const Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 8),
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.all_inbox, color: Color(0xFF06B6D4)),
+                                            SizedBox(width: 10),
+                                            Text(
+                                              'Total Bricks Lift:',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Color(0xFF06B6D4),
+                                                fontSize: 15,
+                                              ),
+                                            ),
+                                            SizedBox(width: 8),
+                                            SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: CircularProgressIndicator(strokeWidth: 2),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 8),
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.all_inbox, color: accentTeal),
+                                          const SizedBox(width: 10),
+                                          Text(
+                                            'Total Bricks Lift:',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: accentTeal,
+                                              fontSize: 15,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            '${snapshot.data}',
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 15,
+                                              color: Color(0xFF06B6D4), // CYAN color for total bricks lift value
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
                                 const SizedBox(height: 12),
                                 Align(
                                   alignment: Alignment.bottomRight,
@@ -193,7 +273,6 @@ class DailyTotalPage extends StatelessWidget {
     );
   }
 
-  // Only for main page: overall on two rows
   Widget _overallRow(int lifts, int earnings, Color color1, Color color2) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -207,13 +286,25 @@ class DailyTotalPage extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        Text(
-          'Lifts: $lifts',
-          style: TextStyle(
-            color: color2,
-            fontWeight: FontWeight.w600,
-            fontSize: 15,
-          ),
+        Row(
+          children: [
+            Text(
+              'Lifts: ',
+              style: TextStyle(
+                color: color2,
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+              ),
+            ),
+            Text(
+              '$lifts',
+              style: const TextStyle(
+                color: Color(0xFF06B6D4), // CYAN color for overall lifts value
+                fontWeight: FontWeight.w900,
+                fontSize: 16,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 2),
         Text(
@@ -228,8 +319,15 @@ class DailyTotalPage extends StatelessWidget {
     );
   }
 
-  // For Labour/Driver/Overall (details bottom sheet): Lifts and Earnings on separate rows
-  Widget _detailRow(String label, int lifts, int earnings, Color color1, Color color2, {bool bold = false}) {
+  Widget _detailRow(
+    String label,
+    int lifts,
+    int earnings,
+    Color color1,
+    Color color2, {
+    bool bold = false,
+    Color liftsColor = Colors.black,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
@@ -244,13 +342,25 @@ class DailyTotalPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            'Lifts: $lifts',
-            style: TextStyle(
-              color: color2,
-              fontWeight: FontWeight.w600,
-              fontSize: bold ? 15 : 13,
-            ),
+          Row(
+            children: [
+              Text(
+                'Lifts: ',
+                style: TextStyle(
+                  color: color2,
+                  fontWeight: FontWeight.w600,
+                  fontSize: bold ? 15 : 13,
+                ),
+              ),
+              Text(
+                '$lifts',
+                style: TextStyle(
+                  color: liftsColor,
+                  fontWeight: FontWeight.w900,
+                  fontSize: bold ? 16 : 14,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 2),
           Text(
@@ -266,7 +376,6 @@ class DailyTotalPage extends StatelessWidget {
     );
   }
 
-  // For Staff (details bottom sheet): no lifts
   Widget _staffDetailRow(int earnings, Color color1, Color color2) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -294,4 +403,5 @@ class DailyTotalPage extends StatelessWidget {
       ),
     );
   }
+
 }
