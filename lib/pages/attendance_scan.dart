@@ -188,14 +188,14 @@ class _AttendanceScanPageState extends State<AttendanceScanPage> {
       // Restrict scan to 6:00 AM - 8:00 PM
       final now = DateTime.now();
       final allowedStart = DateTime(now.year, now.month, now.day, 6, 0, 0); // 6:00 AM
-      final allowedEnd = DateTime(now.year, now.month, now.day, 20, 0, 0);   // 8:00 PM
+      final allowedEnd = DateTime(now.year, now.month, now.day, 19, 0, 0);   // 7:00 PM
 
       if (now.isBefore(allowedStart) || now.isAfter(allowedEnd)) {
         await playSound(false); // Play failure sound
         await vibrate(false);   // Vibrate for failure
         await _showCentralDialog(
           success: false,
-          message: 'Scan not allowed!\nYou can only scan between 06:00 AM and 08:00 PM.',
+          message: 'Scan not allowed!\nYou can only scan between 06:00 AM and 07:00 PM.',
           autoClose: const Duration(seconds: 3),
         );
         _handling = false;
