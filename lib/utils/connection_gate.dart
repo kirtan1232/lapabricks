@@ -1,21 +1,56 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http;
 import 'package:lapabricks/pages/connection_page.dart';
 
-class ConnectionGate extends StatelessWidget {
+class ConnectionGate extends StatefulWidget {
   final Widget child;
   const ConnectionGate({super.key, required this.child});
 
-  Future<bool> hasInternet() async {
-    // First, check if network is available
-    final connectivityResult = await Connectivity().checkConnectivity();
-    final isNetworkAvailable = connectivityResult.contains(ConnectivityResult.mobile) ||
-        connectivityResult.contains(ConnectivityResult.wifi);
+  @override
+  State<ConnectionGate> createState() => _ConnectionGateState();
+}
 
+class _ConnectionGateState extends State<ConnectionGate> {
+  bool _checking = true;
+  bool _hasInternet = false;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkInternet();
+    // Listen for network changes
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((_) {
+      _checkInternet();
+    });
+    // Also check every 5 seconds for real internet (even if network doesn't change)
+    _timer = Timer.periodic(const Duration(seconds: 5), (_) => _checkInternet());
+  }
+
+  @override
+  void dispose() {
+    _connectivitySubscription?.cancel();
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _checkInternet() async {
+    final isConnected = await _hasInternetFunc();
+    if (!mounted) return;
+    setState(() {
+      _hasInternet = isConnected;
+      _checking = false;
+    });
+  }
+
+  Future<bool> _hasInternetFunc() async {
+    final connectivityResults = await Connectivity().checkConnectivity();
+    final isNetworkAvailable = connectivityResults.contains(ConnectivityResult.mobile) ||
+        connectivityResults.contains(ConnectivityResult.wifi);
     if (!isNetworkAvailable) return false;
-
-    // Now, try to ping a server for actual internet
     try {
       final response = await http.get(Uri.parse('https://www.google.com')).timeout(const Duration(seconds: 5));
       return response.statusCode == 200;
@@ -26,42 +61,16 @@ class ConnectionGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<bool>(
-      future: hasInternet(),
-      builder: (context, initialSnapshot) {
-        if (initialSnapshot.connectionState != ConnectionState.done) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-        if (!initialSnapshot.data!) {
-          return ConnectionPage(
-            onRetry: () => (context as Element).markNeedsBuild(),
-          );
-        }
-        return StreamBuilder<List<ConnectivityResult>>(
-          stream: Connectivity().onConnectivityChanged,
-          builder: (context, snapshot) {
-            // When network changes, re-ping for real internet
-            return FutureBuilder<bool>(
-              future: hasInternet(),
-              builder: (context, internetSnapshot) {
-                if (internetSnapshot.connectionState != ConnectionState.done) {
-                  return const Scaffold(
-                    body: Center(child: CircularProgressIndicator()),
-                  );
-                }
-                if (!internetSnapshot.data!) {
-                  return ConnectionPage(
-                    onRetry: () => (context as Element).markNeedsBuild(),
-                  );
-                }
-                return child;
-              },
-            );
-          },
-        );
-      },
-    );
+    if (_checking) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (!_hasInternet) {
+      return ConnectionPage(
+        onRetry: () => _checkInternet(),
+      );
+    }
+    return widget.child;
   }
 }

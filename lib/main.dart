@@ -1,11 +1,13 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:lapabricks/pages/login_page.dart';
-import 'package:lapabricks/providers/labour_store.dart';
-import 'package:lapabricks/utils/connection_gate.dart';
 import 'package:provider/provider.dart';
+import 'package:lapabricks/utils/connection_gate.dart';
+import 'package:lapabricks/pages/login_page.dart';
+import 'package:lapabricks/pages/home_page.dart'; // Or dashboard/homepage
+import 'package:lapabricks/pages/connection_page.dart';
+import 'package:lapabricks/providers/labour_store.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 void main() {
   runApp(const LabourApp());
@@ -36,9 +38,7 @@ class LabourApp extends StatelessWidget {
               useMaterial3: true,
               brightness: Brightness.light,
             ),
-            home: const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            ),
+            home: const Scaffold(body: Center(child: CircularProgressIndicator())),
           );
         }
         return ChangeNotifierProvider(
@@ -51,10 +51,14 @@ class LabourApp extends StatelessWidget {
               useMaterial3: true,
               brightness: Brightness.light,
             ),
-            home: const LapaLoginPage(),
-            // <<<<< THIS WRAPS ALL PAGES WITH ConnectionGate!
-            builder: (context, child) =>
-                ConnectionGate(child: child ?? SizedBox()),
+            builder: (context, child) => ConnectionGate(child: child ?? SizedBox()),
+            // Use onGenerateRoute for navigation after login
+            initialRoute: '/login',
+            routes: {
+              '/login': (context) => LapaLoginPage(),
+              '/home': (context) => HomePage(), // After login, navigate to /home
+              '/connection': (context) => ConnectionPage(onRetry: () {}),
+            },
           ),
         );
       },
