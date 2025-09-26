@@ -53,7 +53,7 @@ class _LapaLoginPageState extends State<LapaLoginPage> {
         showMessage('Login failed. Please try again.', false);
       }
     } catch (e) {
-      showMessage('Login failed. Please try again.', false);
+      showMessage('No Internet Connection', false);
     }
   }
 
@@ -85,7 +85,7 @@ class _LapaLoginPageState extends State<LapaLoginPage> {
             (route) => false,
           );
         } on FirebaseAuthException catch (e) {
-          showMessage('Password changed. Please login with credentials.', false);
+          showMessage('No Internet Connection', false);
           await _storage.delete(key: 'email');
           await _storage.delete(key: 'password');
         }

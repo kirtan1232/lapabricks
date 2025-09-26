@@ -185,12 +185,28 @@ class _AttendanceScanPageState extends State<AttendanceScanPage> {
     _handling = true;
 
     try {
+      // Restrict scan to 6:00 AM - 8:00 PM
+      final now = DateTime.now();
+      final allowedStart = DateTime(now.year, now.month, now.day, 6, 0, 0); // 6:00 AM
+      final allowedEnd = DateTime(now.year, now.month, now.day, 20, 0, 0);   // 8:00 PM
+
+      if (now.isBefore(allowedStart) || now.isAfter(allowedEnd)) {
+        await playSound(false); // Play failure sound
+        await vibrate(false);   // Vibrate for failure
+        await _showCentralDialog(
+          success: false,
+          message: 'Scan not allowed!\nYou can only scan between 06:00 AM and 08:00 PM.',
+          autoClose: const Duration(seconds: 3),
+        );
+        _handling = false;
+        return;
+      }
+
       if (value == null) return;
       if (!value.startsWith('labour:')) {
         await playSound(false);
         await vibrate(false);
         await _showCentralDialog(success: false, message: 'Invalid QR\nThis QR code is not recognized.', autoClose: const Duration(seconds: 2));
-        // No need to navigate; scanner remains open
         return;
       }
 
@@ -214,8 +230,6 @@ class _AttendanceScanPageState extends State<AttendanceScanPage> {
       }
       Duration timeout = occupation == 'Driver' ? const Duration(minutes: 30) : const Duration(minutes: 5);
 
-      final now = DateTime.now();
-
       // --- Firestore global cooldown logic ---
       final lastScan = await getLastScanFromFirestore(id);
       if (lastScan != null) {
@@ -225,15 +239,13 @@ class _AttendanceScanPageState extends State<AttendanceScanPage> {
           await vibrate(false);
           await _showCentralDialog(success: false, message: 'Timeout!\nPlease wait before you can scan again.', autoClose: const Duration(seconds: 2));
           await _showCountdownDialog(timeout - elapsed);
-          return; // Don't add attendance or money if in cooldown
+          return;
         }
       }
 
-      // Mark attendance and add lift/payment
       store.markAttendanceById(id);
       store.addLift(id);
 
-      // Update scan timestamp in Firestore (global)
       await setLastScanToFirestore(id, now);
 
       await playSound(true);
@@ -243,7 +255,6 @@ class _AttendanceScanPageState extends State<AttendanceScanPage> {
 
       await _showCentralDialog(success: true, message: 'Record Updated ($occupation)', autoClose: const Duration(seconds: 2));
 
-      // After success popup, restart scanner for next scan
       await _controller.start();
     } finally {
       _handling = false;

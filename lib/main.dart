@@ -1,12 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:lapabricks/pages/login_page.dart';
 import 'package:lapabricks/providers/labour_store.dart';
+import 'package:lapabricks/utils/connection_gate.dart';
 import 'package:provider/provider.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-
-
 
 void main() {
   runApp(const LabourApp());
@@ -14,6 +13,14 @@ void main() {
 
 class LabourApp extends StatelessWidget {
   const LabourApp({super.key});
+
+  Future<void> _initializeApp() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    await Hive.initFlutter();
+    await Hive.openBox('labours');
+    await Firebase.initializeApp();
+    await FirebaseAuth.instance.signOut();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,18 +51,13 @@ class LabourApp extends StatelessWidget {
               useMaterial3: true,
               brightness: Brightness.light,
             ),
-            home: const LapaLoginPage(), // <-- Use the prefix here
+            home: const LapaLoginPage(),
+            // <<<<< THIS WRAPS ALL PAGES WITH ConnectionGate!
+            builder: (context, child) =>
+                ConnectionGate(child: child ?? SizedBox()),
           ),
         );
       },
     );
-  }
-
-  Future<void> _initializeApp() async {
-    WidgetsFlutterBinding.ensureInitialized();
-    await Hive.initFlutter();
-    await Hive.openBox('labours');
-    await Firebase.initializeApp();
-    await FirebaseAuth.instance.signOut(); // Force sign out every time app starts!
   }
 }

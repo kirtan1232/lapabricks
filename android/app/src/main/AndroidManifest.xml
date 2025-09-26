@@ -13,6 +13,12 @@
     <!-- For Android 13 and above -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
 
+    <!-- Internet permission for connectivity and Firestore -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- (Optional) Access network state for connectivity_plus -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+
     <application
         android:label="LapaBricks"
         android:name="${applicationName}"
