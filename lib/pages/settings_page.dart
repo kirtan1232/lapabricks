@@ -48,8 +48,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _logout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
-    await _storage.delete(key: 'email');
-    await _storage.delete(key: 'password');
+    // Do not delete credentials to preserve fingerprint login
+    // await _storage.delete(key: 'email');
+    // await _storage.delete(key: 'password');
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const LapaLoginPage()),
       (route) => false,

@@ -6,6 +6,7 @@ import 'package:lapabricks/providers/labour_store.dart';
 import 'package:lapabricks/widgets/connectivity_gate.dart';
 import 'package:lapabricks/widgets/page_with_navbar.dart';
 import 'package:lapabricks/widgets/refreshbale_page.dart';
+import 'package:lapabricks/utils/auto_logout_wrapper.dart'; // Import the AutoLogoutWrapper
 import 'package:provider/provider.dart';
 
 class App extends StatefulWidget {
@@ -57,11 +58,13 @@ class _AppState extends State<App> {
           onRefresh: () => _refreshLabours(context),
         );
     }
-    return PageWithNavBar(
-      currentIndex: _selectedIndex,
-      onTap: _onNavTap,
-      onQrTap: _onQrTap,
-      child: ConnectivityGate(child: body),
+    return AutoLogoutWrapper( // Wrap the entire app content with AutoLogoutWrapper
+      child: PageWithNavBar(
+        currentIndex: _selectedIndex,
+        onTap: _onNavTap,
+        onQrTap: _onQrTap,
+        child: ConnectivityGate(child: body),
+      ),
     );
   }
 }
