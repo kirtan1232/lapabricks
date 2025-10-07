@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:lapabricks/pages/edit_details_page.dart';
 import 'package:lapabricks/pages/statement_page.dart';
@@ -5,9 +6,16 @@ import 'package:lapabricks/providers/labour_store.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+// Pass userRole to this page if needed
 class LabourDetailPage extends StatelessWidget {
   final String labourId;
-  const LabourDetailPage({super.key, required this.labourId});
+  final String userRole; // Add this parameter to know if the user is admin
+
+  const LabourDetailPage({
+    super.key,
+    required this.labourId,
+    this.userRole = 'user', // default to user if not provided
+  });
 
   Map<String, String> parseDetails(String details) {
     final lines = details.split('\n');
@@ -77,6 +85,9 @@ class LabourDetailPage extends StatelessWidget {
     int perDayBricks = store.todayBricks(labour.id);
     int totalBricks = store.totalBricks(labour.id);
 
+    // Only admins can see edit and delete on web
+    final bool isWebAdmin = kIsWeb && userRole == 'admin';
+
     return Scaffold(
       backgroundColor: backgroundGray,
       appBar: AppBar(
@@ -103,59 +114,62 @@ class LabourDetailPage extends StatelessWidget {
               );
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.edit),
-            tooltip: 'Edit',
-            color: primaryBlue,
-            onPressed: () async {
-              final result = await Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => EditDetailsPage(labourId: labour.id),
-                ),
-              );
-              if (result == true) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(const SnackBar(content: Text('Person updated')));
-              }
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete),
-            tooltip: 'Delete',
-            color: Colors.redAccent,
-            onPressed: () async {
-              final confirmed = await showDialog<bool>(
-                context: context,
-                builder: (_) => AlertDialog(
-                  title: const Text('Delete Person'),
-                  content: const Text(
-                    'Are you sure you want to delete this person? This cannot be undone.',
+          // Only show Edit and Delete on web for admin
+          if (isWebAdmin) ...[
+            IconButton(
+              icon: const Icon(Icons.edit),
+              tooltip: 'Edit',
+              color: primaryBlue,
+              onPressed: () async {
+                final result = await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => EditDetailsPage(labourId: labour.id),
                   ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(false),
-                      child: const Text('Cancel'),
+                );
+                if (result == true) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('Person updated')));
+                }
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete),
+              tooltip: 'Delete',
+              color: Colors.redAccent,
+              onPressed: () async {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (_) => AlertDialog(
+                    title: const Text('Delete Person'),
+                    content: const Text(
+                      'Are you sure you want to delete this person? This cannot be undone.',
                     ),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text('Cancel'),
                       ),
-                      onPressed: () => Navigator.of(context).pop(true),
-                      child: const Text('Delete'),
-                    ),
-                  ],
-                ),
-              );
-              if (confirmed == true) {
-                store.deleteLabour(labour.id);
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(const SnackBar(content: Text('Person deleted')));
-              }
-            },
-          ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                        ),
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: const Text('Delete'),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirmed == true) {
+                  store.deleteLabour(labour.id);
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('Person deleted')));
+                }
+              },
+            ),
+          ],
         ],
       ),
       body: SafeArea(

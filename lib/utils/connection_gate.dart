@@ -2,7 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http;
-import 'package:lapabricks/pages/connection_page.dart';
+import 'package:lapabricks/connection/connection_page.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class ConnectionGate extends StatefulWidget {
   final Widget child;
@@ -21,13 +22,20 @@ class _ConnectionGateState extends State<ConnectionGate> {
   @override
   void initState() {
     super.initState();
-    _checkInternet();
-    // Listen for network changes
-    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((_) {
+    if (!kIsWeb) {
       _checkInternet();
-    });
-    // Also check every 5 seconds for real internet (even if network doesn't change)
-    _timer = Timer.periodic(const Duration(seconds: 5), (_) => _checkInternet());
+      _connectivitySubscription =
+          Connectivity().onConnectivityChanged.listen((_) {
+        _checkInternet();
+      });
+      _timer = Timer.periodic(const Duration(seconds: 5), (_) => _checkInternet());
+    } else {
+      // On web, always allow connection
+      setState(() {
+        _checking = false;
+        _hasInternet = true;
+      });
+    }
   }
 
   @override
@@ -52,7 +60,8 @@ class _ConnectionGateState extends State<ConnectionGate> {
         connectivityResults.contains(ConnectivityResult.wifi);
     if (!isNetworkAvailable) return false;
     try {
-      final response = await http.get(Uri.parse('https://www.google.com')).timeout(const Duration(seconds: 5));
+      final response = await http.get(Uri.parse('https://www.google.com'))
+          .timeout(const Duration(seconds: 5));
       return response.statusCode == 200;
     } catch (_) {
       return false;

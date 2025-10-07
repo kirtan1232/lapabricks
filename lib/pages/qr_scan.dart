@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:vibration/vibration.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 
 class AttendanceScanPage extends StatefulWidget {
   const AttendanceScanPage({super.key});
@@ -18,6 +19,7 @@ class _AttendanceScanPageState extends State<AttendanceScanPage> {
   late final MobileScannerController _controller;
   bool _handling = false;
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final FlutterTts flutterTts = FlutterTts();
 
   static const Color primaryBlue = Color(0xFF2563EB);
   static const Color lightBlue = Color(0xFF3B82F6);
@@ -40,6 +42,7 @@ class _AttendanceScanPageState extends State<AttendanceScanPage> {
   void dispose() {
     _controller.dispose();
     _audioPlayer.dispose();
+    flutterTts.stop();
     super.dispose();
   }
 
@@ -70,6 +73,13 @@ class _AttendanceScanPageState extends State<AttendanceScanPage> {
         Vibration.vibrate(duration: 400, amplitude: 255);
       }
     }
+  }
+
+  // NEW FUNCTION: Announce both name and lift count
+  Future<void> announceNameAndLift(String name, int liftCount) async {
+    await flutterTts.setLanguage("en-US");
+    await flutterTts.setPitch(1.0);
+    await flutterTts.speak("$name, $liftCount");
   }
 
   Future<void> _showCentralDialog({required bool success, required String message, Duration? autoClose}) async {
@@ -245,16 +255,23 @@ class _AttendanceScanPageState extends State<AttendanceScanPage> {
 
       store.markAttendanceById(id);
       store.addLift(id);
-
       await setLastScanToFirestore(id, now);
 
-      await playSound(true);
+      // Get today's lift count (after recording)
+      int liftCount = 0;
+      if (occupation == "Labour" || occupation == "Driver") {
+        liftCount = store.todayLifts(id);
+        await announceNameAndLift(labour.name, liftCount); // Say name and lift count
+      } else {
+        await playSound(true); // For Staff, play success.mp3
+      }
+
       await vibrate(true);
       await _controller.stop();
       if (!mounted) return;
 
-      await _showCentralDialog(success: true, message: 'Record Updated ($occupation)', autoClose: const Duration(seconds: 2));
-
+      // Show person's name instead of occupation in dialog
+      await _showCentralDialog(success: true, message: 'Record Updated\n${labour.name}', autoClose: const Duration(seconds: 2));
       await _controller.start();
     } finally {
       _handling = false;

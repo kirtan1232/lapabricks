@@ -1,11 +1,14 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:lapabricks/pages/pdf_download_page.dart';
+import 'package:lapabricks/pdf/pdf_download_page.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:lapabricks/models/labour.dart';
 import 'package:lapabricks/models/daily_total.dart';
 import 'package:lapabricks/utils/pdf_daily_report.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:printing/printing.dart';
+import 'package:lapabricks/pdf/previous_day_report.dart'; // <-- Import the new page
 
 class PdfViewPage extends StatefulWidget {
   final String date;
@@ -30,7 +33,9 @@ class _PdfViewPageState extends State<PdfViewPage> {
   @override
   void initState() {
     super.initState();
-    _loadPdf();
+    if (!kIsWeb) {
+      _loadPdf();
+    }
   }
 
   Future<void> _loadPdf() async {
@@ -57,12 +62,62 @@ class _PdfViewPageState extends State<PdfViewPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Calculate yesterday's date in yyyy-MM-dd format
+    final now = DateTime.now();
+    final yesterday = now.subtract(const Duration(days: 1));
+    final yesterdayDate = "${yesterday.year.toString().padLeft(4, '0')}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}";
+
+    if (kIsWeb) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Daily Records'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.history),
+              tooltip: "Previous Day Report",
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PreviousDayReportPage(date: yesterdayDate),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+        body: PdfPreview(
+          build: (format) => generateDailyPdfDocument(
+            date: widget.date,
+            labours: widget.labours,
+            dailyTotal: widget.dailyTotal,
+          ).then((pdf) => pdf.save()),
+          canChangePageFormat: false,
+          canDebug: false,
+          allowPrinting: true,
+          allowSharing: true,
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Daily Records'),
+        title: const Text('Daily Records'),
         actions: [
           IconButton(
-            icon: Icon(Icons.print),
+            icon: const Icon(Icons.history),
+            tooltip: "Previous Day Report",
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PreviousDayReportPage(date: yesterdayDate),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.print),
             tooltip: "Print/Share",
             onPressed: () {
               Navigator.push(
@@ -80,7 +135,7 @@ class _PdfViewPageState extends State<PdfViewPage> {
         ],
       ),
       body: _pdfController == null
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : PdfViewPinch(
               controller: _pdfController!,
               scrollDirection: Axis.vertical,

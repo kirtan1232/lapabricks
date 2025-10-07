@@ -1,9 +1,10 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:lapabricks/pages/edit_profile_page.dart';
-import 'package:lapabricks/pages/login_page.dart';
+import 'package:lapabricks/auth/login_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -237,6 +238,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               ),
                             ),
                           ),
+                          // Removed Create Account button on Web
                         ],
                       ),
                     ),

@@ -3,8 +3,7 @@ import 'package:printing/printing.dart';
 import 'package:lapabricks/models/labour.dart';
 import 'package:lapabricks/models/daily_total.dart';
 import 'package:lapabricks/utils/pdf_daily_report.dart';
-import 'package:lapabricks/pages/pdf_view_page.dart'; // <-- Import your PdfViewPage
-import 'package:lapabricks/pages/home_page.dart'; // <-- Import your HomePage
+import 'package:lapabricks/pdf/pdf_view_page.dart';
 
 class PdfPreviewPage extends StatefulWidget {
   final String date;
@@ -41,23 +40,13 @@ class _PdfPreviewPageState extends State<PdfPreviewPage> {
     setState(() {
       _isPrintingComplete = true;
     });
-    // Navigate to homepage
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => HomePage()), // <-- Change to your actual homepage widget
-      (route) => false,
-    );
+    // Do NOT navigate away automatically!
+    // Let user go back manually
   }
 
   Future<bool> _onWillPop() async {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => PdfViewPage(
-          date: widget.date,
-          labours: widget.labours,
-          dailyTotal: widget.dailyTotal,
-        ),
-      ),
-    );
+    // Instead of pushReplacement, just pop to previous page
+    Navigator.of(context).pop();
     return false; // Prevent default back navigation
   }
 

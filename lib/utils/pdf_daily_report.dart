@@ -2,6 +2,13 @@ import 'package:lapabricks/models/daily_total.dart';
 import 'package:lapabricks/models/labour.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:flutter/services.dart' show rootBundle;
+
+// Load NotoSans font for Unicode support
+Future<pw.Font> _loadUnicodeFont() async {
+  final fontData = await rootBundle.load('assets/fonts/NotoSans-Regular.ttf');
+  return pw.Font.ttf(fontData);
+}
 
 Future<pw.Document> generateDailyPdfDocument({
   required String date,
@@ -9,6 +16,7 @@ Future<pw.Document> generateDailyPdfDocument({
   required DailyTotal dailyTotal,
 }) async {
   final pdfDoc = pw.Document();
+  final unicodeFont = await _loadUnicodeFont();
 
   // Helper to get brick type from Labour, fallback to details field
   String? getBrickType(Labour l) {
@@ -19,7 +27,6 @@ Future<pw.Document> generateDailyPdfDocument({
     return null;
   }
 
-  // General page generator
   void addPage({
     required String title,
     required bool Function(Labour) filter,
@@ -45,7 +52,6 @@ Future<pw.Document> generateDailyPdfDocument({
           : '-';
 
       if (forStaff) {
-        // For staff page: Only these columns
         totalEarnings += earningsNum;
         tableData.add([
           labour.name,
@@ -55,14 +61,12 @@ Future<pw.Document> generateDailyPdfDocument({
           departure,
         ]);
       } else {
-        // For other pages: All columns
         final liftsStr = (record['lifts'] ?? 0).toString();
         final liftsNum = int.tryParse(liftsStr) ?? 0;
         final perLiftPrice = (labour.perLiftPrice != null)
             ? 'Rs ${labour.perLiftPrice}'
             : '-';
 
-        // Extract lift detail from details string
         int liftDetail = 1;
         final details = labour.details ?? '';
         final regex = RegExp(r'Lift:\s*(\d+)');
@@ -71,9 +75,7 @@ Future<pw.Document> generateDailyPdfDocument({
           liftDetail = int.tryParse(match.group(1) ?? '') ?? 1;
         }
 
-        // Name with lift detail
         String nameWithLift = '${labour.name} ($liftDetail)';
-        // Brick Lift
         final brickLiftNum = liftDetail * liftsNum;
         final brickLiftStr = brickLiftNum.toString();
 
@@ -100,13 +102,13 @@ Future<pw.Document> generateDailyPdfDocument({
     } else {
       tableData.add([
         'Total',
-        '', // Occupation
-        '', // Per Lift Price
+        '',
+        '',
         totalLifts.toString(),
         totalBrickLifts.toString(),
         'Rs $totalEarnings',
-        '', // Arrived
-        '', // Departed
+        '',
+        '',
       ]);
     }
 
@@ -119,7 +121,7 @@ Future<pw.Document> generateDailyPdfDocument({
               level: 0,
               child: pw.Text(
                 'Lapa Bricks Daily Report - $date\n$title',
-                style: pw.TextStyle(fontSize: 18),
+                style: pw.TextStyle(fontSize: 18, font: unicodeFont),
               ),
             ),
             pw.SizedBox(height: 8),
@@ -139,6 +141,7 @@ Future<pw.Document> generateDailyPdfDocument({
                                 fontWeight: pw.FontWeight.bold,
                                 color: PdfColors.white,
                                 fontSize: 9,
+                                font: unicodeFont,
                               ),
                             ),
                           ),
@@ -150,6 +153,7 @@ Future<pw.Document> generateDailyPdfDocument({
                                 fontWeight: pw.FontWeight.bold,
                                 color: PdfColors.white,
                                 fontSize: 9,
+                                font: unicodeFont,
                               ),
                             ),
                           ),
@@ -161,6 +165,7 @@ Future<pw.Document> generateDailyPdfDocument({
                                 fontWeight: pw.FontWeight.bold,
                                 color: PdfColors.white,
                                 fontSize: 9,
+                                font: unicodeFont,
                               ),
                             ),
                           ),
@@ -172,6 +177,7 @@ Future<pw.Document> generateDailyPdfDocument({
                                 fontWeight: pw.FontWeight.bold,
                                 color: PdfColors.white,
                                 fontSize: 9,
+                                font: unicodeFont,
                               ),
                             ),
                           ),
@@ -183,6 +189,7 @@ Future<pw.Document> generateDailyPdfDocument({
                                 fontWeight: pw.FontWeight.bold,
                                 color: PdfColors.white,
                                 fontSize: 9,
+                                font: unicodeFont,
                               ),
                             ),
                           ),
@@ -196,6 +203,7 @@ Future<pw.Document> generateDailyPdfDocument({
                                 fontWeight: pw.FontWeight.bold,
                                 color: PdfColors.white,
                                 fontSize: 9,
+                                font: unicodeFont,
                               ),
                             ),
                           ),
@@ -207,6 +215,7 @@ Future<pw.Document> generateDailyPdfDocument({
                                 fontWeight: pw.FontWeight.bold,
                                 color: PdfColors.white,
                                 fontSize: 9,
+                                font: unicodeFont,
                               ),
                             ),
                           ),
@@ -218,6 +227,7 @@ Future<pw.Document> generateDailyPdfDocument({
                                 fontWeight: pw.FontWeight.bold,
                                 color: PdfColors.white,
                                 fontSize: 9,
+                                font: unicodeFont,
                               ),
                             ),
                           ),
@@ -229,6 +239,7 @@ Future<pw.Document> generateDailyPdfDocument({
                                 fontWeight: pw.FontWeight.bold,
                                 color: PdfColors.white,
                                 fontSize: 9,
+                                font: unicodeFont,
                               ),
                             ),
                           ),
@@ -240,6 +251,7 @@ Future<pw.Document> generateDailyPdfDocument({
                                 fontWeight: pw.FontWeight.bold,
                                 color: PdfColors.white,
                                 fontSize: 9,
+                                font: unicodeFont,
                               ),
                             ),
                           ),
@@ -251,6 +263,7 @@ Future<pw.Document> generateDailyPdfDocument({
                                 fontWeight: pw.FontWeight.bold,
                                 color: PdfColors.white,
                                 fontSize: 9,
+                                font: unicodeFont,
                               ),
                             ),
                           ),
@@ -262,6 +275,7 @@ Future<pw.Document> generateDailyPdfDocument({
                                 fontWeight: pw.FontWeight.bold,
                                 color: PdfColors.white,
                                 fontSize: 9,
+                                font: unicodeFont,
                               ),
                             ),
                           ),
@@ -273,12 +287,12 @@ Future<pw.Document> generateDailyPdfDocument({
                                 fontWeight: pw.FontWeight.bold,
                                 color: PdfColors.white,
                                 fontSize: 9,
+                                font: unicodeFont,
                               ),
                             ),
                           ),
                         ],
                 ),
-                // Data rows
                 ...List.generate(tableData.length, (rowIdx) {
                   final row = tableData[rowIdx];
                   final isTotalRow = rowIdx == tableData.length - 1;
@@ -298,8 +312,12 @@ Future<pw.Document> generateDailyPdfDocument({
                               ? pw.TextStyle(
                                   fontWeight: pw.FontWeight.bold,
                                   fontSize: 9,
+                                  font: unicodeFont,
                                 )
-                              : pw.TextStyle(fontSize: 8),
+                              : pw.TextStyle(
+                                  fontSize: 8,
+                                  font: unicodeFont,
+                                ),
                           textAlign: (forStaff
                               ? (colIdx == 2
                                     ? pw.TextAlign.right
@@ -314,24 +332,28 @@ Future<pw.Document> generateDailyPdfDocument({
                 }),
               ],
             ),
+            pw.SizedBox(height: 18),
+            pw.Text(
+              'Page End (पृष्ठ अन्त्य)', // End 
+              style: pw.TextStyle(font: unicodeFont, fontSize: 14),
+            ),
           ];
         },
       ),
     );
   }
 
-  // Order: Kacho Brick, Pako Brick, Driver, Staff
   addPage(
-    title: "Kacho Brick Labours",
+    title: "Kacho (काचो)Brick Labours",
     filter: (l) => l.occupation == "Labour" && getBrickType(l) == "Kacho Brick",
   );
   addPage(
-    title: "Pako Brick Labours",
+    title: "Pako (पाको)Brick Labours",
     filter: (l) => l.occupation == "Labour" && getBrickType(l) == "Pako Brick",
   );
-  addPage(title: "Drivers", filter: (l) => l.occupation == "Driver");
+  addPage(title: "Drivers(गाडी)", filter: (l) => l.occupation == "Driver");
   addPage(
-    title: "Staff",
+    title: "Staff(स्ताफ्फ़)",
     filter: (l) => l.occupation == "Staff",
     forStaff: true,
   );

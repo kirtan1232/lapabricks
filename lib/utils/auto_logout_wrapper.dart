@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:lapabricks/pages/login_page.dart';
+import 'package:lapabricks/auth/login_page.dart';
 
 class AutoLogoutWrapper extends StatefulWidget {
   final Widget child;
@@ -16,7 +16,7 @@ class AutoLogoutWrapper extends StatefulWidget {
 class _AutoLogoutWrapperState extends State<AutoLogoutWrapper> with WidgetsBindingObserver {
   Timer? _idleTimer;
   DateTime? _pausedTime;
-  final Duration _timeout = const Duration(minutes: 2);
+  final Duration _timeout = const Duration(minutes: 5);
   final _storage = const FlutterSecureStorage();
   bool _isLoggedIn = false;
 

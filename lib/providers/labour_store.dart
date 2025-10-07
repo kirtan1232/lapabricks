@@ -246,6 +246,18 @@ class LabourStore extends ChangeNotifier {
     return 1;
   }
 
+  /// Returns today's lift count for the given labour id.
+  int todayLifts(String id) {
+    final labour = byId(id);
+    if (labour == null) return 0;
+    final now = DateTime.now();
+    final todayStr = "${now.year.toString().padLeft(4, '0')}-"
+        "${now.month.toString().padLeft(2, '0')}-"
+        "${now.day.toString().padLeft(2, '0')}";
+    final todayRecord = labour.dailyRecords[todayStr];
+    return (todayRecord?['lifts'] ?? 0) as int;
+  }
+
   Future<void> updateDailyTotals(DateTime date) async {
     final todayStr = "${date.year.toString().padLeft(4, '0')}-"
         "${date.month.toString().padLeft(2, '0')}-"

@@ -124,26 +124,12 @@ class StatementPage extends StatelessWidget {
               itemBuilder: (context, idx) {
                 final date = sortedKeys[idx];
                 final record = records[date]!;
-                final earnings = record['earnings'] ?? 0;
                 final lifts = record['lifts'] ?? 0;
                 final arrived = getArrivalTime(date);
                 final depart = getDepartureTime(date);
 
                 final bricksLifted = (labour.occupation != 'Staff') ? (lifts * liftDetail) : 0;
                 runningBricksTotal += bricksLifted;
-
-                final totalTillNow = labour.dailyRecords.entries
-                    .where((e) => e.key.compareTo(date) <= 0)
-                    .fold(0, (a, b) => a + (b.value['earnings'] ?? 0));
-
-                int totalBricksTillNow = 0;
-                labour.dailyRecords.entries
-                    .where((e) => e.key.compareTo(date) <= 0)
-                    .forEach((e) {
-                  if (labour.occupation != 'Staff') {
-                    totalBricksTillNow += (e.value['lifts'] ?? 0) * liftDetail;
-                  }
-                });
 
                 return Card(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
@@ -165,11 +151,16 @@ class StatementPage extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Earnings: Rs $earnings',
-                              style: const TextStyle(color: darkGray, fontWeight: FontWeight.w500)),
                           if (labour.occupation != 'Staff')
-                            Text('Lifts: $lifts',
-                                style: const TextStyle(color: lightGray, fontWeight: FontWeight.w500)),
+                            Text(
+                              'Bricks Lifted: $bricksLifted',
+                              style: const TextStyle(color: accentTeal, fontWeight: FontWeight.bold),
+                            ),
+                          if (labour.occupation != 'Staff')
+                            Text(
+                              'Lifts: $lifts',
+                              style: const TextStyle(color: lightGray, fontWeight: FontWeight.w500),
+                            ),
                           if (arrived != null)
                             Text('Arrived: $arrived',
                                 style: const TextStyle(color: darkGray, fontWeight: FontWeight.w500)),
@@ -210,7 +201,8 @@ class StatementPage extends StatelessWidget {
                                 ],
                               ),
                               const SizedBox(height: 18),
-                              Text('Earnings: Rs $earnings',
+                              // (Details modal remains unchanged)
+                              Text('Earnings: Rs ${record['earnings'] ?? 0}',
                                   style: const TextStyle(fontSize: 16, color: darkGray)),
                               if (labour.occupation != 'Staff')
                                 Text('Lifts: $lifts',
@@ -221,7 +213,6 @@ class StatementPage extends StatelessWidget {
                               if (depart != null)
                                 Text('Departed: $depart',
                                     style: const TextStyle(fontSize: 15, color: lightGray)),
-
                               if (labour.occupation != 'Staff') ...[
                                 const Divider(height: 28),
                                 Row(
@@ -244,7 +235,7 @@ class StatementPage extends StatelessWidget {
                                     Icon(Icons.all_inbox, color: primaryBlue),
                                     const SizedBox(width: 8),
                                     Text(
-                                      'Total Bricks Till Now: $totalBricksTillNow',
+                                      'Total Bricks Till Now: ${runningBricksTotal}',
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         color: primaryBlue,
@@ -256,7 +247,7 @@ class StatementPage extends StatelessWidget {
                               ],
                               const Divider(height: 30),
                               Text(
-                                'Total till now: Rs $totalTillNow',
+                                'Total till now: Rs ${labour.dailyRecords.entries.where((e) => e.key.compareTo(date) <= 0).fold(0, (a, b) => a + (b.value['earnings'] ?? 0))}',
                                 style: const TextStyle(
                                     fontWeight: FontWeight.w600, fontSize: 16, color: primaryBlue),
                               ),

@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:lapabricks/pages/home_page.dart';
-import 'package:lapabricks/pages/attendance_scan.dart';
+import 'package:lapabricks/pages/qr_scan.dart';
 import 'package:lapabricks/pages/settings_page.dart';
 import 'package:lapabricks/providers/labour_store.dart';
 import 'package:lapabricks/widgets/connectivity_gate.dart';
 import 'package:lapabricks/widgets/page_with_navbar.dart';
 import 'package:lapabricks/widgets/refreshbale_page.dart';
-import 'package:lapabricks/utils/auto_logout_wrapper.dart'; // Import the AutoLogoutWrapper
+import 'package:lapabricks/utils/auto_logout_wrapper.dart';
 import 'package:provider/provider.dart';
 
+// Add userRole to App, pass from login_page.dart
 class App extends StatefulWidget {
-  const App({super.key});
+  final String userRole;
+  const App({Key? key, this.userRole = 'user'}) : super(key: key);
 
   @override
   State<App> createState() => _AppState();
@@ -42,7 +44,7 @@ class _AppState extends State<App> {
     switch (_selectedIndex) {
       case 0:
         body = RefreshablePage(
-          child: const HomePage(),
+          child: HomePage(userRole: widget.userRole), // Pass userRole
           onRefresh: () => _refreshLabours(context),
         );
         break;
@@ -54,11 +56,11 @@ class _AppState extends State<App> {
         break;
       default:
         body = RefreshablePage(
-          child: const HomePage(),
+          child: HomePage(userRole: widget.userRole), // Pass userRole
           onRefresh: () => _refreshLabours(context),
         );
     }
-    return AutoLogoutWrapper( // Wrap the entire app content with AutoLogoutWrapper
+    return AutoLogoutWrapper(
       child: PageWithNavBar(
         currentIndex: _selectedIndex,
         onTap: _onNavTap,

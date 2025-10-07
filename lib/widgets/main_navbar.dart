@@ -1,10 +1,11 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 class MainNavBar extends StatelessWidget {
   final int currentIndex;
   final void Function(int) onTap;
   final VoidCallback onQrTap;
-  final bool navEnabled; // <-- New flag
+  final bool navEnabled;
 
   const MainNavBar({
     super.key,
@@ -16,7 +17,6 @@ class MainNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Modern color scheme matching the updated home page
     const Color primaryBlue = Color(0xFF2563EB);
     const Color lightGray = Color(0xFF64748B);
     const Color cardWhite = Color(0xFFFFFFFF);
@@ -46,7 +46,7 @@ class MainNavBar extends StatelessWidget {
         height: navBarHeight,
         padding: EdgeInsets.symmetric(
           horizontal: isTablet ? 32 : 16,
-          vertical: 8,
+          vertical: kIsWeb ? 4 : 8, // Tighter padding on web
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -97,7 +97,7 @@ class MainNavBar extends StatelessWidget {
     return GestureDetector(
       onTap: navEnabled ? () => onTap(index) : null,
       child: Opacity(
-        opacity: navEnabled ? 1 : 0.4, // visually disable when not enabled
+        opacity: navEnabled ? 1 : 0.4,
         child: Container(
           padding: EdgeInsets.symmetric(
             horizontal: isTablet ? 16 : 12,

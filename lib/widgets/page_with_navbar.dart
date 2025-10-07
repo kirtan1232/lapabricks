@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:lapabricks/widgets/main_navbar.dart';
 
@@ -29,25 +30,29 @@ class PageWithNavBar extends StatelessWidget {
     final fabSize = isTablet ? 58.0 : 52.0;
     final fabIconSize = isTablet ? 32.0 : 28.0;
 
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    // Use bottom padding for safe area, with a fallback for web
+    final bottomPadding = kIsWeb ? 0.0 : MediaQuery.of(context).padding.bottom;
     final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
 
-    // Hide FAB if keyboard is open OR showFab is false
-    final showQrFab = showFab && !isKeyboardOpen;
+    // Hide FAB if keyboard is open OR showFab is false OR Profile is selected OR if on web
+    final showQrFab = showFab && !isKeyboardOpen && currentIndex != 2 && !kIsWeb;
 
     return Scaffold(
       body: SafeArea(child: child),
-      bottomNavigationBar: MainNavBar(
-        currentIndex: currentIndex,
-        onTap: onTap,
-        onQrTap: onQrTap,
-        navEnabled: navEnabled,
+      bottomNavigationBar: ClipRect(
+        child: MainNavBar(
+          currentIndex: currentIndex,
+          onTap: onTap,
+          onQrTap: onQrTap,
+          navEnabled: navEnabled,
+        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: showQrFab
           ? Container(
               margin: EdgeInsets.only(
-                bottom: bottomPadding > 0 ? 8 : 4,
+                // Adjusted to prevent overflow, tighter on web
+                bottom: kIsWeb ? 2.0 : (bottomPadding > 0 ? bottomPadding : 4.0),
               ),
               child: Container(
                 width: fabSize,
