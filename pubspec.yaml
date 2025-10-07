@@ -96,6 +96,7 @@ flutter:
     - assets/logo.png
     - assets/sounds/success.mp3
     - assets/sounds/failure.mp3
+    - assets/fonts/NotoSans-Regular.ttf
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
