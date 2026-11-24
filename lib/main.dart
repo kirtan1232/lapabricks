@@ -18,26 +18,7 @@ void main() {
 class LabourApp extends StatelessWidget {
   const LabourApp({super.key});
 
-  Future<void> _initializeApp() async {
-    WidgetsFlutterBinding.ensureInitialized();
-    await Hive.initFlutter();
-    await Hive.openBox('labours');
-    // Use FirebaseOptions for web compatibility
-    await Firebase.initializeApp(
-      options: kIsWeb
-          ? const FirebaseOptions(
-              apiKey: "AIzaSyD0o567F2IsVijtxTWvUQZdb_LDBwuvMt8",
-              authDomain: "lapabricks.firebaseapp.com",
-              projectId: "lapabricks",
-              storageBucket: "lapabricks.firebasestorage.app",
-              messagingSenderId: "574340724336",
-              appId: "1:574340724336:web:ccca46a26adec762c566b5",
-              measurementId: "G-FRL36ZZ4K7",
-            )
-          : null,
-    );
-    await FirebaseAuth.instance.signOut();
-  }
+
 
   // Only use ConnectionGate for Android/iOS
   bool get useConnectionGate =>
